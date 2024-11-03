@@ -41,11 +41,11 @@ export default function Component() {
 
         {/* Navigation Buttons */}
         <nav className="relative z-10 w-full mt-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-px">
             {[
                 {title: 'О компании', href: "about"},
                 {title: 'Бренд-портфель', href: "brand"},
-                {title: 'Авторизация', href: ""},
+                {title: 'Авторизация', href: "user"},
                 {title: 'Пакеты услуг эл/связи', href: ""},
                 {title: 'Акции', href: "sales"},
             ].map((text) => (
