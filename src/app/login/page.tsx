@@ -13,12 +13,9 @@ export default function Component() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('token');
             await axios.post('/api/admin/login', {
                 username,
                 password,
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
             setMessage('Call added successfully');
         } catch (error) {
