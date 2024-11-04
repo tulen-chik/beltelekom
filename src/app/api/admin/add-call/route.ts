@@ -1,30 +1,26 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method not allowed' });
-    }
-
-    const token = req.headers.authorization?.split(' ')[1];
+export async function POST(req: NextRequest) {
+    const token = req.headers.get('authorization')?.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
+        return NextResponse.json({ message: 'No token provided' }, { status: 401 });
     }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { userId: number, role: string };
 
         if (decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'Access denied. Admin only.' });
+            return NextResponse.json({ message: 'Access denied. Admin only.' }, { status: 403 });
         }
 
-        const { userId, date, code, duration, amount, callType } = req.body;
+        const { userId, date, code, duration, amount, callType } = await req.json();
 
         if (!userId || !date || !code || !duration || !amount || !callType) {
-            return res.status(400).json({ message: 'All fields are required' });
+            return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
         }
 
         await sql`
@@ -32,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       VALUES (${userId}, ${date}, ${code}, ${duration}, ${amount}, ${callType})
     `;
 
-        res.status(201).json({ message: 'Call record added successfully' });
+        return NextResponse.json({ message: 'Call record added successfully' }, { status: 201 });
     } catch (error) {
         console.error('Error adding call record:', error);
-        res.status(500).json({ message: 'Error adding call record' });
+        return NextResponse.json({ message: 'Error adding call record' }, { status: 500 });
     }
 }

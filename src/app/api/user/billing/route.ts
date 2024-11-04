@@ -1,21 +1,15 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@/lib/auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ message: 'Method not allowed' });
-    }
-
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
-    }
-
+export async function GET(request: Request) {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+        const token = request.headers.get('Authorization')?.split(' ')[1];
+        if (!token) {
+            return NextResponse.json({ message: 'No token provided' }, { status: 401 });
+        }
+
+        const decoded = await verifyToken(token);
         const userId = decoded.userId;
 
         // Fetch local services
@@ -43,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       SELECT * FROM billing_summary WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1
     `;
 
-        res.status(200).json({
+        return NextResponse.json({
             localServices: localServices.rows,
             wireServices: wireServices.rows,
             longDistanceCalls: longDistanceCalls.rows,
@@ -52,6 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     } catch (error) {
         console.error('Error fetching billing statement:', error);
-        res.status(500).json({ message: 'Error fetching billing statement' });
+        return NextResponse.json({ message: 'Error fetching billing statement' }, { status: 500 });
     }
 }
