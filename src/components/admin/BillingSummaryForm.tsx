@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
 
 interface BillingSummaryFormData {
     userId: string
@@ -13,19 +12,46 @@ interface BillingSummaryFormData {
 }
 
 export default function BillingSummaryForm() {
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [message, setMessage] = useState('')
+    const [formData, setFormData] = useState<BillingSummaryFormData>({
+        userId: '',
+        month: '',
+        totalCharges: '',
+        previousBalance: '',
+        paymentsReceived: '',
+        currentBalance: '',
+    });
+    const [errors, setErrors] = useState<Partial<Record<keyof BillingSummaryFormData, string>>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState('');
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-    } = useForm<BillingSummaryFormData>()
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
 
-    async function onSubmit(values: BillingSummaryFormData) {
-        setIsSubmitting(true)
-        setMessage('')
+    const validateForm = () => {
+        const newErrors: Partial<Record<keyof BillingSummaryFormData, string>> = {};
+        if (!formData.userId) newErrors.userId = 'ID пользователя обязателен';
+        if (!formData.month) newErrors.month = 'Месяц обязателен';
+        if (!formData.totalCharges) newErrors.totalCharges = 'Общая сумма начислений обязательна';
+        else if (parseFloat(formData.totalCharges) < 0) newErrors.totalCharges = 'Сумма должна быть положительной';
+        if (!formData.previousBalance) newErrors.previousBalance = 'Предыдущий баланс обязателен';
+        if (!formData.paymentsReceived) newErrors.paymentsReceived = 'Полученные платежи обязательны';
+        else if (parseFloat(formData.paymentsReceived) < 0) newErrors.paymentsReceived = 'Сумма должна быть положительной';
+        if (!formData.currentBalance) newErrors.currentBalance = 'Текущий баланс обязателен';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setMessage('');
+        setErrors({});
+
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
         try {
             const response = await fetch('/api/admin/billing-summary', {
                 method: 'POST',
@@ -34,30 +60,37 @@ export default function BillingSummaryForm() {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
                 body: JSON.stringify({
-                    userId: parseInt(values.userId),
-                    month: values.month,
-                    totalCharges: parseFloat(values.totalCharges),
-                    previousBalance: parseFloat(values.previousBalance),
-                    paymentsReceived: parseFloat(values.paymentsReceived),
-                    currentBalance: parseFloat(values.currentBalance),
+                    userId: parseInt(formData.userId),
+                    month: formData.month,
+                    totalCharges: parseFloat(formData.totalCharges),
+                    previousBalance: parseFloat(formData.previousBalance),
+                    paymentsReceived: parseFloat(formData.paymentsReceived),
+                    currentBalance: parseFloat(formData.currentBalance),
                 }),
-            })
+            });
 
             if (!response.ok) {
-                throw new Error('Ошибка при отправке данных')
+                throw new Error('Ошибка при отправке данных');
             }
 
-            setMessage('Сводка по счету успешно добавлена/обновлена')
-            reset()
+            setMessage('Сводка по счету успешно добавлена/обновлена');
+            setFormData({
+                userId: '',
+                month: '',
+                totalCharges: '',
+                previousBalance: '',
+                paymentsReceived: '',
+                currentBalance: '',
+            });
         } catch (error) {
-            setMessage('Не удалось добавить/обновить сводку по счету')
+            setMessage('Не удалось добавить/обновить сводку по счету');
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
-    }
+    };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div>
                 <label htmlFor="userId" className="block text-sm font-medium text-gray-700">
                     ID пользователя
@@ -65,11 +98,13 @@ export default function BillingSummaryForm() {
                 <input
                     type="number"
                     id="userId"
-                    {...register('userId', { required: 'ID пользователя обязателен' })}
+                    name="userId"
+                    value={formData.userId}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 {errors.userId && (
-                    <p className="mt-1 text-sm text-red-600">{errors.userId.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.userId}</p>
                 )}
             </div>
 
@@ -80,12 +115,14 @@ export default function BillingSummaryForm() {
                 <input
                     type="text"
                     id="month"
-                    {...register('month', { required: 'Месяц обязателен' })}
+                    name="month"
+                    value={formData.month}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     placeholder="Например: Май 2024"
                 />
                 {errors.month && (
-                    <p className="mt-1 text-sm text-red-600">{errors.month.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.month}</p>
                 )}
             </div>
 
@@ -96,15 +133,13 @@ export default function BillingSummaryForm() {
                 <input
                     type="number"
                     id="totalCharges"
-                    {...register('totalCharges', {
-                        required: 'Общая сумма начислений обязательна',
-                        min: { value: 0, message: 'Сумма должна быть положительной' }
-                    })}
-                    step="0.01"
+                    name="totalCharges"
+                    value={formData.totalCharges}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 {errors.totalCharges && (
-                    <p className="mt-1 text-sm text-red-600">{errors.totalCharges.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.totalCharges}</p>
                 )}
             </div>
 
@@ -115,12 +150,13 @@ export default function BillingSummaryForm() {
                 <input
                     type="number"
                     id="previousBalance"
-                    {...register('previousBalance', { required: 'Предыдущий баланс обязателен' })}
-                    step="0.01"
+                    name="previousBalance"
+                    value={formData.previousBalance}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 {errors.previousBalance && (
-                    <p className="mt-1 text-sm text-red-600">{errors.previousBalance.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.previousBalance}</p>
                 )}
             </div>
 
@@ -131,15 +167,13 @@ export default function BillingSummaryForm() {
                 <input
                     type="number"
                     id="paymentsReceived"
-                    {...register('paymentsReceived', {
-                        required: 'Полученные платежи обязательны',
-                        min: { value: 0, message: 'Сумма должна быть положительной' }
-                    })}
-                    step="0.01"
+                    name="paymentsReceived"
+                    value={formData.paymentsReceived}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 {errors.paymentsReceived && (
-                    <p className="mt-1 text-sm text-red-600">{errors.paymentsReceived.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.paymentsReceived}</p>
                 )}
             </div>
 
@@ -150,12 +184,13 @@ export default function BillingSummaryForm() {
                 <input
                     type="number"
                     id="currentBalance"
-                    {...register('currentBalance', { required: 'Текущий баланс обязателен' })}
-                    step="0.01"
+                    name="currentBalance"
+                    value={formData.currentBalance}
+                    onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
                 {errors.currentBalance && (
-                    <p className="mt-1 text-sm text-red-600">{errors.currentBalance.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.currentBalance}</p>
                 )}
             </div>
 
