@@ -16,27 +16,29 @@ export async function GET(request: Request) {
             return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 })
         }
 
-        // Получаем данные о счетах пользователя из базы данных
+        // Получаем звонки пользователя из базы данных
         const result = await sql`
-      SELECT * FROM billing_summary
+      SELECT * FROM calls
       WHERE user_id = ${decoded.userId}
-      ORDER BY month DESC
+      ORDER BY call_date DESC
     `
 
         // Форматируем данные для ответа
-        const billingSummaries = result.rows.map(billing => ({
-            id: billing.id,
-            month: billing.month,
-            total_charges: parseFloat(billing.total_charges),
-            previous_balance: parseFloat(billing.previous_balance),
-            payments_received: parseFloat(billing.payments_received),
-            current_balance: parseFloat(billing.current_balance)
+        const calls = result.rows.map(call => ({
+            id: call.id,
+            callDate: call.call_date,
+            callType: call.call_type,
+            serviceName: call.service_name,
+            quantity: call.quantity,
+            code: call.code,
+            minutes: call.minutes,
+            amount: parseFloat(call.amount)
         }))
 
         // Возвращаем отформатированные данные
-        return NextResponse.json({ billingSummaries }, { status: 200 })
+        return NextResponse.json({ calls }, { status: 200 })
     } catch (error) {
-        console.error('Error fetching user billing summaries:', error)
+        console.error('Error fetching user calls:', error)
         return NextResponse.json({ message: 'Внутренняя ошибка сервера' }, { status: 500 })
     }
 }

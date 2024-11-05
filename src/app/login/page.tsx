@@ -32,12 +32,7 @@ export default function LoginPage() {
                 localStorage.setItem('token', data.token)
                 localStorage.setItem('userRole', data.role)
 
-                // Redirect based on role
-                if (data.role === 'admin') {
-                    router.push('/admin')
-                } else {
-                    router.push('/billing')
-                }
+                router.push('/user')
             } else {
                 setError(data.message || "Неверный логин или пароль")
             }
