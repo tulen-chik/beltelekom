@@ -11,14 +11,14 @@ export default function Component() {
 
             {/* Navigation Buttons */}
             <nav className="w-full grid grid-cols-2 gap-px">
-                {['Руководство', 'Сотрудничество'].map((text) => (
+                {[{name: 'Руководство', href: "/about/management"}, {name: 'Сотрудничество', href: "/about/help"}].map((text) => (
                     <Link
-                        key={text}
-                        href="#"
+                        key={text.name}
+                        href={text.href}
                         className="bg-[#1a365d] hover:bg-[#2a4a7d] text-white font-normal flex items-center justify-center h-[50px]"
                         style={{ fontFamily: 'Arial', fontSize: '16pt' }}
                     >
-                        {text}
+                        {text.name}
                     </Link>
                 ))}
             </nav>

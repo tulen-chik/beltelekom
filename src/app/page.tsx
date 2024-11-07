@@ -8,7 +8,7 @@ export default function Component() {
         <div
             className="absolute inset-0 opacity-70 bg-cover bg-center z-0"
             style={{
-              backgroundImage: `url('/placeholder.svg?height=1080&width=1920')`,
+              backgroundImage: `url('/cfc5ca50003ae5464466cc3cb095b135.jpg')`,
               filter: 'brightness(0.7)'
             }}
         />
@@ -27,16 +27,7 @@ export default function Component() {
 
         {/* Main Content */}
         <main className="flex-grow relative z-10 container mx-auto px-4 py-8 flex flex-col items-center justify-center">
-          {/* Logo */}
-          <div className="w-[200px] h-[200px] relative mb-8">
-            <Image
-                src="/placeholder.svg?height=200&width=200"
-                alt="Белтелеком"
-                width={200}
-                height={200}
-                className="object-contain"
-            />
-          </div>
+
         </main>
 
         {/* Navigation Buttons */}
@@ -46,7 +37,7 @@ export default function Component() {
                 {title: 'О компании', href: "about"},
                 {title: 'Бренд-портфель', href: "brand"},
                 {title: 'Авторизация', href: "user"},
-                {title: 'Пакеты услуг эл/связи', href: ""},
+                {title: 'Пакеты услуг эл/связи', href: "package"},
                 {title: 'Акции', href: "sales"},
             ].map((text) => (
                 <Link
