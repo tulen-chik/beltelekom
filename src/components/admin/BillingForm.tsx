@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import type { Subscriber } from '@/types'
 
 export default function BillingForm() {
     const [subscriberNumber, setSubscriberNumber] = useState('')
-    const [subscriber, setSubscriber] = useState<any>(null)
+    const [subscriber, setSubscriber] = useState<Subscriber | null>(null)
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const [error, setError] = useState('')
@@ -15,16 +17,18 @@ export default function BillingForm() {
         setError('')
         setSubscriber(null)
         try {
-            const response = await fetch(`/api/admin/subscriber?number=${subscriberNumber}`)
-            if (response.ok) {
-                const data = await response.json()
-                if (data) {
-                    setSubscriber(data)
-                } else {
-                    setError('Абонент не найден')
-                }
+            const { data, error } = await supabase
+                .from('subscribers')
+                .select('*')
+                .eq('subscriber_number', subscriberNumber)
+                .single()
+
+            if (error) throw error
+
+            if (data) {
+                setSubscriber(data)
             } else {
-                setError('Ошибка при поиске абонента')
+                setError('Абонент не найден')
             }
         } catch (err) {
             setError('Ошибка при поиске абонента')
@@ -47,7 +51,7 @@ export default function BillingForm() {
             })
             if (response.ok) {
                 const data = await response.json()
-                setSuccess(`Счет успешно сформирован и сохранен: ${data.fileName}`)
+                setSuccess(`Счет успешно сформирован и сохранен в файл: ${data.fileName}`)
             } else {
                 setError('Ошибка при формировании счета')
             }
@@ -100,7 +104,7 @@ export default function BillingForm() {
                             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt className="text-sm font-medium text-gray-500">Признак льготности</dt>
                                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                    {subscriber.category === '0.5' ? 'Льготный' : 'Обычный'}
+                                    {subscriber.category === '0.5' ? 'Льготный (0.5)' : 'Обычный (1)'}
                                 </dd>
                             </div>
                         </dl>

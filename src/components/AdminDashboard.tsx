@@ -1,41 +1,32 @@
 'use client'
 
-import { useState } from 'react'
 import Header from '@/components/header'
 import LogoutButton from '@/components/LogoutButton'
-import CallForm from '@/components/admin/CallForm'
-import BillingSummaryForm from '@/components/admin/BillingSummaryForm'
+import BillingForm from '@/components/admin/BillingSummaryForm'
 
 export default function AdminDashboard() {
-    const [activeForm, setActiveForm] = useState<string | null>(null)
 
     return (
-        <div className="min-h-screen bg-white flex flex-col">
-            <Header />
+        <div className="min-h-screen bg-gray-100">
+            <Header/>
 
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold">Панель администратора</h1>
-                    <LogoutButton />
+                    <LogoutButton/>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <button
-                        onClick={() => setActiveForm('calls')}
-                        className="p-4 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Добавить звонок/услугу
-                    </button>
-                    <button
-                        onClick={() => setActiveForm('billingSummary')}
-                        className="p-4 bg-green-500 text-white rounded hover:bg-green-600"
-                    >
-                        Сводка по счетам
-                    </button>
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div className="px-4 py-5 sm:px-6">
+                        <h2 className="text-lg leading-6 font-medium text-gray-900">Формирование счета</h2>
+                        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                            Введите номер абонента и период для формирования счета
+                        </p>
+                    </div>
+                    <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+                        <BillingForm/>
+                    </div>
                 </div>
-
-                {activeForm === 'calls' && <CallForm />}
-                {activeForm === 'billingSummary' && <BillingSummaryForm />}
             </main>
         </div>
     )

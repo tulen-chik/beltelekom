@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/header'
+import Cookies from 'js-cookie'
 
 export default function LoginPage() {
-    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
@@ -22,17 +23,23 @@ export default function LoginPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ email, password }),
             })
 
             const data = await response.json()
+            console.log(data)
 
             if (response.ok) {
-                // Store the token and role
-                localStorage.setItem('token', data.token)
-                localStorage.setItem('userRole', data.role)
+                // Store the token and user profile in cookies
+                Cookies.set('userRole', data.profile.role, { expires: 7 })
+                Cookies.set('userProfile', JSON.stringify(data.profile), { expires: 7 })
 
-                router.push('/user')
+                // Redirect based on user role
+                if (data.profile.role === 'admin') {
+                    router.push('/admin')
+                } else {
+                    router.push('/user')
+                }
             } else {
                 setError(data.message || "Неверный логин или пароль")
             }
@@ -49,20 +56,28 @@ export default function LoginPage() {
 
             <main className="flex-grow flex items-center justify-center px-4">
                 <div className="w-full max-w-md space-y-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="text-center">
+                        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+                            Вход в систему
+                        </h2>
+                        <p className="mt-2 text-sm text-gray-600">
+                            Введите ваш электронный адрес и пароль
+                        </p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="space-y-4">
                             <div>
                                 <label
-                                    htmlFor="username"
+                                    htmlFor="subscriber_number"
                                     className="block text-2xl font-medium text-gray-900"
                                 >
-                                    Логин
+                                    Электронный адрес
                                 </label>
                                 <input
-                                    id="username"
+                                    id="subscriber_number"
                                     type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     required
                                     className="mt-1 block w-full text-lg py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     disabled={isLoading}

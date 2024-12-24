@@ -4,16 +4,16 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
     try {
-        const { username, password, role = 'user' } = await request.json();
+        const { subscriber_number, password, role = 'user', address, full_name, category } = await request.json();
 
         // Validate input
-        if (!username || !password) {
+        if (!subscriber_number || !password) {
             return NextResponse.json({ message: 'Username and password are required' }, { status: 400 });
         }
 
         // Check if username already exists
         const existingUser = await sql`
-      SELECT * FROM users WHERE username = ${username}
+      SELECT * FROM subscribers WHERE subscriber_number = ${subscriber_number}
     `;
 
         if (existingUser.rows.length > 0) {
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
 
         // Insert new user
         const result = await sql`
-      INSERT INTO users (username, password, role)
-      VALUES (${username}, ${hashedPassword}, ${role})
-      RETURNING id, username, role
+      INSERT INTO subscribers (subscriber_number, password, role, address, full_name, category)
+      VALUES (${subscriber_number}, ${hashedPassword}, ${role}, ${address}, ${full_name}, ${category})
+      RETURNING id, subscriber_number, role
     `;
 
         const newUser = result.rows[0];
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
             message: 'User created successfully',
             user: {
                 id: newUser.id,
-                username: newUser.username,
+                subscriber_number: newUser.subscriber_number,
                 role: newUser.role
             }
         }, { status: 201 });
