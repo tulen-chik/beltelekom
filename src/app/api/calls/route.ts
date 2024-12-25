@@ -33,3 +33,38 @@ export async function GET(request: Request) {
     return NextResponse.json(data)
 }
 
+export async function POST(request: Request) {
+    try {
+        const body = await request.json()
+        const { zone_code, call_date, start_time, duration, subscriber_id } = body
+
+        // Проверка наличия всех необходимых полей
+        if (!zone_code || !call_date || !start_time || !duration || !subscriber_id) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        }
+
+        // Создание звонка в базе данных
+        const { data, error } = await supabase
+            .from('calls')
+            .insert({
+                zone_code,
+                call_date,
+                start_time,
+                duration,
+                subscriber_id
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error creating call:', error)
+            return NextResponse.json({ error: 'Failed to create call' }, { status: 500 })
+        }
+
+        console.log('Call created successfully:', data)
+        return NextResponse.json(data, { status: 201 })
+    } catch (error) {
+        console.error('Unexpected error:', error)
+        return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
+    }
+}

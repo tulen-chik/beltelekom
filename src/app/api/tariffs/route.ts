@@ -36,3 +36,41 @@ export async function GET(request: Request) {
     return NextResponse.json(data)
 }
 
+export async function POST(request: Request) {
+    try {
+        const body = await request.json()
+        const { zone_code, name, start_date, day_rate_start, night_rate_start, end_date, day_rate_end, night_rate_end } = body
+
+        // Проверка наличия всех необходимых полей
+        if (!zone_code || !name || !start_date || !end_date || day_rate_start === undefined || night_rate_start === undefined || day_rate_end === undefined || night_rate_end === undefined) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        }
+
+        // Создание тарифа в базе данных
+        const { data, error } = await supabase
+            .from('tariffs')
+            .insert({
+                zone_code,
+                name,
+                start_date,
+                day_rate_start,
+                night_rate_start,
+                end_date,
+                day_rate_end,
+                night_rate_end
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error creating tariff:', error)
+            return NextResponse.json({ error: 'Failed to create tariff' }, { status: 500 })
+        }
+
+        console.log('Tariff created successfully:', data)
+        return NextResponse.json(data, { status: 201 })
+    } catch (error) {
+        console.error('Unexpected error:', error)
+        return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
+    }
+}
