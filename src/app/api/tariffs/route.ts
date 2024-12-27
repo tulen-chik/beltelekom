@@ -74,3 +74,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
     }
 }
+
+export async function DELETE(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const zoneCode = searchParams.get('zone_code');
+
+        if (!zoneCode) {
+            return NextResponse.json({ error: 'Missing zone_code parameter' }, { status: 400 });
+        }
+
+        const { error } = await supabase
+            .from('tariffs')
+            .delete()
+            .eq('zone_code', zoneCode);
+
+        if (error) {
+            console.error('Error deleting tariff:', error);
+            return NextResponse.json({ error: 'Failed to delete tariff' }, { status: 500 });
+        }
+
+        return NextResponse.json({ message: 'Tariff deleted successfully' }, { status: 200 });
+
+    } catch (error) {
+        console.error('Unexpected error:', error);
+        return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+    }
+}

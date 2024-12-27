@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Calendar, DollarSign, X, CheckSquare, Square, ChevronDown, ChevronUp, LogOut, Phone, Plus, Tag } from 'lucide-react'
-import { Subscriber, Call, Tariff, Bill } from '../types/index'
+import { Search, Calendar, DollarSign, X, CheckSquare, Square, ChevronDown, ChevronUp, LogOut, Phone, Plus, Tag, FileText } from 'lucide-react'
+import { Subscriber, Call, Tariff, Bill, Rate } from '../types/index'
 import { format } from 'date-fns'
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 
 export default function AdminPanel() {
+    const [activeSection, setActiveSection] = useState<'calls' | 'bills' | 'tariffs'>('calls')
     const [searchTerm, setSearchTerm] = useState<string>('')
     const [searchResults, setSearchResults] = useState<Subscriber[]>([])
     const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null)
@@ -64,21 +65,6 @@ export default function AdminPanel() {
         setBill(null)
     }
 
-    const handleDeleteTariff = async (zoneCode: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            await axios.delete(`/api/tariffs?zone_code=${encodeURIComponent(zoneCode)}`);
-            alert('Tariff deleted successfully!');
-            fetchTariffs();
-        } catch (error) {
-            console.error('Error deleting tariff:', error);
-            setError('Failed to delete tariff. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const fetchCalls = useCallback(async () => {
         if (selectedSubscriber && startDate && endDate) {
             setLoading(true)
@@ -109,10 +95,11 @@ export default function AdminPanel() {
         setError(null)
         try {
             const response = await axios.get<Tariff[]>('/api/tariffs/all')
-            setTariffs(response.data)
+            setTariffs(response.data || [])
         } catch (error) {
             console.error('Error fetching tariffs:', error)
             setError('Failed to fetch tariffs. Please try again.')
+            setTariffs([])
         } finally {
             setLoading(false)
         }
@@ -157,9 +144,8 @@ export default function AdminPanel() {
                 if (tariff) {
                     const callTime = new Date(`1970-01-01T${call.start_time}`)
                     const isDayTime = callTime.getHours() >= 6 && callTime.getHours() < 22
-                    const rate = isDayTime ? tariff.day_rate_end : tariff.night_rate_end
-                    const effectiveRate = rate ?? 0
-                    const callCost = (call.duration / 60) * effectiveRate
+                    const rate: Rate = isDayTime ? tariff.day_rate_end : tariff.night_rate_end
+                    const callCost = (call.duration / 60) * (rate ? rate : 0)
 
                     totalAmount += callCost
                     details.push({
@@ -263,7 +249,7 @@ export default function AdminPanel() {
                 console.log('Tariff created successfully:', response.data)
                 alert('Tariff created successfully!')
                 setIsCreateTariffModalOpen(false)
-                setNewTariff({name:'', start_date:'', day_rate_start:0, night_rate_start:0, end_date:'', day_rate_end:0, night_rate_end:0, zone_code:''}) //reset form
+                setNewTariff({name:'', start_date:'', day_rate_start:0, night_rate_start:0, end_date:'', day_rate_end:0, night_rate_end:0, zone_code:''})
                 fetchTariffs()
             } catch (error) {
                 console.error('Error creating tariff:', error)
@@ -276,204 +262,280 @@ export default function AdminPanel() {
         }
     }
 
+    const handleDeleteTariff = async (zoneCode: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            await axios.delete(`/api/tariffs?zone_code=${encodeURIComponent(zoneCode)}`);
+            alert('Tariff deleted successfully!');
+            fetchTariffs();
+        } catch (error) {
+            console.error('Error deleting tariff:', error);
+            setError('Failed to delete tariff. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="container mx-auto p-4 max-w-4xl">
-            <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Panel</h1>
-                        <p className="text-gray-600">Manage subscribers, calls, and bills</p>
-                    </div>
+        <div className="flex h-screen bg-gray-100">
+            {/* Sidebar */}
+            <div className="w-64 bg-white shadow-md">
+                <div className="p-4">
+                    <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+                    <nav>
+                        <ul className="space-y-2">
+                            <li>
+                                <button
+                                    onClick={() => setActiveSection('calls')}
+                                    className={`flex items-center w-full p-2 rounded ${activeSection === 'calls' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
+                                >
+                                    <Phone className="mr-2" />
+                                    Calls
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    onClick={() => setActiveSection('tariffs')}
+                                    className={`flex items-center w-full p-2 rounded ${activeSection === 'tariffs' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
+                                >
+                                    <Tag className="mr-2" />
+                                    Tariffs
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                <div className="absolute bottom-4 left-4">
                     <button
                         onClick={handleLogout}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex items-center"
+                        className="flex items-center text-red-500 hover:text-red-700"
                     >
-                        <LogOut className="mr-2 h-5 w-5"/>
+                        <LogOut className="mr-2" />
                         Logout
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Subscriber Search</h2>
-                <div className="flex items-center mb-4">
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Enter full or partial subscriber ID"
-                        className="border rounded-l p-2 flex-grow"
-                    />
-                    <button
-                        onClick={handleSearch}
-                        className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 transition-colors"
-                        disabled={loading}
-                    >
-                        <Search className="h-5 w-5"/>
-                    </button>
-                </div>
-                {searchResults.length > 0 && (
-                    <ul className="mt-2 border rounded divide-y">
-                        {searchResults.map((result) => (
-                            <li
-                                key={result.subscriber_id}
-                                onClick={() => handleSubscriberSelect(result)}
-                                className="cursor-pointer hover:bg-gray-100 p-2 transition-colors"
-                            >
-                                Subscriber ID: {result.subscriber_id}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-
-            <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-semibold text-gray-800">Tariff Management</h2>
-                    <button
-                        onClick={() => setIsCreateTariffModalOpen(true)}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
-                    >
-                        <Plus className="mr-2 h-5 w-5"/>
-                        Create Tariff
-                    </button>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white">
-                        <thead className="bg-gray-100">
-                        <tr>
-                            <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Zone Code</th>
-                            <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Day Rate</th>
-                            <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Night Rate</th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                        {tariffs.map((tariff) => (
-                            <tr key={tariff.zone_code} className="hover:bg-gray-50">
-                                <td className="py-2 px-4 text-sm text-gray-800">{tariff.zone_code}</td>
-                                {tariff.day_rate_end ? <td className="py-2 px-4 text-sm text-gray-800">${tariff.day_rate_end.toFixed(2)}</td> : <></>}
-                                {tariff.night_rate_end ? <td className="py-2 px-4 text-sm text-gray-800">${tariff.night_rate_end.toFixed(2)}</td> : <></>}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {selectedSubscriber && (
-                <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold text-gray-800">Date Range Selection</h2>
-                        <button
-                            onClick={() => setIsCreateCallModalOpen(true)}
-                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
-                        >
-                            <Plus className="mr-2 h-5 w-5"/>
-                            Create Call
-                        </button>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                            <Calendar className="h-5 w-5 mr-2 text-gray-500"/>
-                            <DatePicker
-                                selected={startDate}
-                                onChange={(date: Date | null) => setStartDate(date ?? undefined)}
-                                selectsStart
-                                startDate={startDate}
-                                endDate={endDate}
-                                placeholderText="Start Date"
-                                className="border rounded p-2"
-                            />
-                        </div>
-                        <div className="flex items-center">
-                            <Calendar className="h-5 w-5 mr-2 text-gray-500"/>
-                            <DatePicker
-                                selected={endDate}
-                                onChange={(date: Date | null) => setEndDate(date ?? undefined)}
-                                selectsEnd
-                                startDate={startDate}
-                                endDate={endDate}
-                                minDate={startDate}
-                                placeholderText="End Date"
-                                className="border rounded p-2"
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {loading && (
-                <div className="bg-blue-100 text-blue-700 p-4 rounded mb-4">
-                    Loading...
-                </div>
-            )}
-            {error && (
-                <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
-                    {error}
-                </div>
-            )}
-
-            {calls.length > 0 && (
-                <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold text-gray-800">Select Calls</h2>
-                        <button
-                            onClick={() => setExpandedCalls(!expandedCalls)}
-                            className="text-blue-500 hover:text-blue-700 transition-colors"
-                        >
-                            {expandedCalls ? <ChevronUp className="h-5 w-5"/> : <ChevronDown className="h-5 w-5"/>}
-                        </button>
-                    </div>
-                    {expandedCalls && (
-                        <>
-                            <div className="mb-4 space-x-2">
+            {/* Main content */}
+            <div className="flex-1 overflow-y-auto p-8">
+                {activeSection === 'calls' && (
+                    <div className="space-y-8">
+                        <div className="bg-white shadow-md rounded-lg p-6">
+                            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Subscriber Search</h2>
+                            <div className="flex items-center mb-4">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Enter full or partial subscriber ID"
+                                    className="border rounded-l p-2 flex-grow"
+                                />
                                 <button
-                                    onClick={handleSelectAll}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                                    onClick={handleSearch}
+                                    className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 transition-colors"
+                                    disabled={loading}
                                 >
-                                    Select All
-                                </button>
-                                <button
-                                    onClick={handleDeselectAll}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
-                                >
-                                    Deselect All
+                                    <Search className="h-5 w-5"/>
                                 </button>
                             </div>
-                            <ul className="max-h-60 overflow-y-auto border rounded p-2">
-                                {calls.map((call) => (
-                                    <li key={call.id} className="flex items-center py-2 border-b last:border-b-0">
-                                        <button
-                                            onClick={() => handleCallToggle(call)}
-                                            className="mr-2 text-gray-500 hover:text-blue-500 transition-colors"
+                            {searchResults.length > 0 && (
+                                <ul className="mt-2 border rounded divide-y">
+                                    {searchResults.map((result) => (
+                                        <li
+                                            key={result.subscriber_id}
+                                            onClick={() => handleSubscriberSelect(result)}
+                                            className="cursor-pointer hover:bg-gray-100 p-2 transition-colors"
                                         >
-                                            {selectedCalls.some((c) => c.id === call.id) ? (
-                                                <CheckSquare className="h-5 w-5"/>
-                                            ) : (
-                                                <Square className="h-5 w-5"/>
-                                            )}
-                                        </button>
-                                        <span>{new Date(call.call_date).toLocaleDateString()} - {call.start_time} - {call.duration} seconds</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )}
-                </div>
-            )}
+                                            Subscriber ID: {result.subscriber_id}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
 
-            {selectedCalls.length > 0 && (
-                <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-                    <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bill Generation</h2>
-                    <button
-                        onClick={generateBill}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                        disabled={loading}
-                    >
-                        Generate Bill
-                    </button>
-                </div>
-            )}
+                        {selectedSubscriber && (
+                            <div className="bg-white shadow-md rounded-lg p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-2xl font-semibold text-gray-800">Date Range Selection</h2>
+                                    <button
+                                        onClick={() => setIsCreateCallModalOpen(true)}
+                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
+                                    >
+                                        <Plus className="mr-2 h-5 w-5"/>
+                                        Create Call
+                                    </button>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center">
+                                        <Calendar className="h-5 w-5 mr-2 text-gray-500"/>
+                                        <DatePicker
+                                            selected={startDate}
+                                            onChange={(date: Date | null) => setStartDate(date ?? undefined)}
+                                            selectsStart
+                                            startDate={startDate}
+                                            endDate={endDate}
+                                            placeholderText="Start Date"
+                                            className="border rounded p-2"
+                                        />
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Calendar className="h-5 w-5 mr-2 text-gray-500"/>
+                                        <DatePicker
+                                            selected={endDate}
+                                            onChange={(date: Date | null) => setEndDate(date ?? undefined)}
+                                            selectsEnd
+                                            startDate={startDate}
+                                            endDate={endDate}
+                                            minDate={startDate}
+                                            placeholderText="End Date"
+                                            className="border rounded p-2"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {loading && (
+                            <div className="bg-blue-100 text-blue-700 p-4 rounded mb-4">
+                                Loading...
+                            </div>
+                        )}
+                        {error && (
+                            <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+                                {error}
+                            </div>
+                        )}
+
+                        {calls.length > 0 && (
+                            <div className="bg-white shadow-md rounded-lg p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-2xl font-semibold text-gray-800">Select Calls</h2>
+                                    <button
+                                        onClick={() => setExpandedCalls(!expandedCalls)}
+                                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                                    >
+                                        {expandedCalls ? <ChevronUp className="h-5 w-5"/> : <ChevronDown className="h-5 w-5"/>}
+                                    </button>
+                                </div>
+                                {expandedCalls && (
+                                    <>
+                                        <div className="mb-4 space-x-2">
+                                            <button
+                                                onClick={handleSelectAll}
+                                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                onClick={handleDeselectAll}
+                                                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+                                            >
+                                                Deselect All
+                                            </button>
+                                        </div>
+                                        <ul className="max-h-60 overflow-y-auto border rounded p-2">
+                                            {calls.map((call) => (
+                                                <li key={call.id} className="flex items-center py-2 border-b last:border-b-0">
+                                                    <button
+                                                        onClick={() => handleCallToggle(call)}
+                                                        className="mr-2 text-gray-500 hover:text-blue-500 transition-colors"
+                                                    >
+                                                        {selectedCalls.some((c) => c.id === call.id) ? (
+                                                            <CheckSquare className="h-5 w-5"/>
+                                                        ) : (
+                                                            <Square className="h-5 w-5"/>
+                                                        )}
+                                                    </button>
+                                                    <span>{new Date(call.call_date).toLocaleDateString()} - {call.start_time} - {call.duration} seconds</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {selectedCalls.length > 0 && (
+                            <div className="bg-white shadow-md rounded-lg p-6">
+                                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bill Generation</h2>
+                                <button
+                                    onClick={generateBill}
+                                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                                    disabled={loading}
+                                >
+                                    Generate Bill
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeSection === 'bills' && (
+                    <div className="bg-white shadow-md rounded-lg p-6">
+                        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bills Management</h2>
+                        {/* Add bills management functionality here */}
+                    </div>
+                )}
+
+                {activeSection === 'tariffs' && (
+                    <div className="bg-white shadow-md rounded-lg p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-semibold text-gray-800">Tariff Management</h2>
+                            <button
+                                onClick={() => setIsCreateTariffModalOpen(true)}
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
+                            >
+                                <Plus className="mr-2 h-5 w-5"/>
+                                Create Tariff
+                            </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full bg-white">
+                                <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Zone Code</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Name</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Start Date</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">End Date</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Day Rate</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Night Rate</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                {tariffs && tariffs.length > 0 ? (
+                                    tariffs.map((tariff) => (
+                                        <tr key={tariff.zone_code} className="hover:bg-gray-50">
+                                            <td className="py-2 px-4 text-sm text-gray-800">{tariff.zone_code}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">{tariff.name}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">{tariff.start_date}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">{tariff.end_date}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">${tariff.day_rate_end?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">${tariff.night_rate_end?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="py-2 px-4 text-sm text-gray-800">
+                                                <button
+                                                    onClick={() => handleDeleteTariff(tariff.zone_code)}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={7} className="py-4 px-4 text-sm text-gray-500 text-center">
+                                            No tariffs available
+                                        </td>
+                                    </tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <AnimatePresence>
                 {isModalOpen && bill && (
@@ -654,10 +716,18 @@ export default function AdminPanel() {
             <AnimatePresence>
                 {isCreateTariffModalOpen && (
                     <motion.div
-                        // ... (modal styling)
+                        initial={{opacity: 0}}
+                        animate={{opacity: 1}}
+                        exit={{opacity: 0}}
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                        onClick={() => setIsCreateTariffModalOpen(false)}
                     >
                         <motion.div
-                            // ... (modal content styling)
+                            initial={{scale: 0.9, opacity: 0}}
+                            animate={{scale: 1, opacity: 1}}
+                            exit={{scale: 0.9, opacity: 0}}
+                            className="bg-white rounded-lg p-6 w-full max-w-md"
+                            onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-semibold text-gray-800">Create New Tariff</h2>
@@ -692,7 +762,7 @@ export default function AdminPanel() {
                                         id="zone_code"
                                         value={newTariff.zone_code || ''}
                                         onChange={(e) => setNewTariff({...newTariff, zone_code: e.target.value})}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                        className="mt-1 block w-fullborder border-gray-300 rounded-md shadow-sm p-2"
                                         required
                                     />
                                 </div>
@@ -795,4 +865,3 @@ export default function AdminPanel() {
         </div>
     )
 }
-

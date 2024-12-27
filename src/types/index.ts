@@ -1,3 +1,5 @@
+export type Rate = number | null;
+
 export interface Subscriber {
     subscriber_id: string;
     category: '0.5' | '1'; // Значения из столбца category
