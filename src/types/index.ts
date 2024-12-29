@@ -32,6 +32,7 @@ export interface BillDetail {
     time: string; // Время билла
     duration: number; // Продолжительность в секундах или минутах
     cost: number; // Стоимость
+    tariffName: string;
 }
 
 export interface Bill {

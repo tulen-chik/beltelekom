@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     if (error) {
         console.error('Supabase error:', error)
-        return NextResponse.json({ error: 'Failed to fetch tariff' }, { status: 500 })
+        return NextResponse.json({ error: `Failed to fetch tariff ${error}` }, { status: 500 })
     }
 
     if (!data) {

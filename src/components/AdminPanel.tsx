@@ -6,7 +6,7 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Calendar, DollarSign, X, CheckSquare, Square, ChevronDown, ChevronUp, LogOut, Phone, Plus, Tag, FileText } from 'lucide-react'
-import { Subscriber, Call, Tariff, Bill, Rate } from '../types/index'
+import { Subscriber, Call, Tariff, Bill, Rate, BillDetail } from '../types/index'
 import { format } from 'date-fns'
 import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
@@ -48,8 +48,8 @@ export default function AdminPanel() {
             const response = await axios.get<Subscriber[]>(`/api/subscribers?search=${encodeURIComponent(searchTerm)}`)
             setSearchResults(response.data)
         } catch (error) {
-            console.error('Error searching subscribers:', error)
-            setError('Failed to search subscribers. Please try again.')
+            console.error('Ошибка поиска абонентов:', error)
+            setError('Не удалось найти абонентов. Пожалуйста, попробуйте снова.')
         } finally {
             setLoading(false)
         }
@@ -79,11 +79,11 @@ export default function AdminPanel() {
                 })
                 setCalls(response.data)
                 if (response.data.length === 0) {
-                    setError('No calls found for the selected date range.')
+                    setError('Звонки за выбранный период не найдены.')
                 }
             } catch (error) {
-                console.error('Error fetching calls:', error)
-                setError('Failed to fetch calls. Please try again.')
+                console.error('Ошибка получения звонков:', error)
+                setError('Не удалось получить звонки. Пожалуйста, попробуйте снова.')
             } finally {
                 setLoading(false)
             }
@@ -97,8 +97,8 @@ export default function AdminPanel() {
             const response = await axios.get<Tariff[]>('/api/tariffs/all')
             setTariffs(response.data || [])
         } catch (error) {
-            console.error('Error fetching tariffs:', error)
-            setError('Failed to fetch tariffs. Please try again.')
+            console.error('Ошибка получения тарифов:', error)
+            setError('Не удалось получить тарифы. Пожалуйста, попробуйте снова.')
             setTariffs([])
         } finally {
             setLoading(false)
@@ -152,7 +152,8 @@ export default function AdminPanel() {
                         date: call.call_date,
                         time: call.start_time,
                         duration: call.duration,
-                        cost: callCost
+                        cost: callCost,
+                        tariffName: tariff.name
                     })
                 }
             }
@@ -169,8 +170,8 @@ export default function AdminPanel() {
                 setIsModalOpen(true)
             }
         } catch (error) {
-            console.error("Error generating bill:", error)
-            setError('Failed to generate bill. Please try again.')
+            console.error("Ошибка генерации счета:", error)
+            setError('Не удалось сгенерировать счет. Пожалуйста, попробуйте снова.')
         } finally {
             setLoading(false)
         }
@@ -188,14 +189,14 @@ export default function AdminPanel() {
                     amount: bill.totalAmount,
                     details: bill.details
                 })
-                console.log('Bill saved successfully:', response.data)
-                alert('Bill saved successfully!')
+                console.log('Счет успешно сохранен:', response.data)
+                alert('Счет успешно сохранен!')
                 setSelectedCalls([])
                 setBill(null)
                 setIsModalOpen(false)
             } catch (error) {
-                console.error('Error saving bill:', error)
-                setError('Failed to save bill. Please try again.')
+                console.error('Ошибка сохранения счета:', error)
+                setError('Не удалось сохранить счет. Пожалуйста, попробуйте снова.')
             } finally {
                 setLoading(false)
             }
@@ -206,7 +207,7 @@ export default function AdminPanel() {
         const hours = Math.floor(seconds / 3600)
         const minutes = Math.floor((seconds % 3600) / 60)
         const remainingSeconds = seconds % 60
-        return `${hours}h ${minutes}m ${remainingSeconds}s`
+        return `${hours}ч ${minutes}м ${remainingSeconds}с`
     }
 
     const handleLogout = () => {
@@ -224,19 +225,19 @@ export default function AdminPanel() {
                     subscriber_id: selectedSubscriber.subscriber_id,
                     ...newCall
                 })
-                console.log('Call created successfully:', response.data)
-                alert('Call created successfully!')
+                console.log('Звонок успешно создан:', response.data)
+                alert('Звонок успешно создан!')
                 setIsCreateCallModalOpen(false)
                 setNewCall({})
                 fetchCalls()
             } catch (error) {
-                console.error('Error creating call:', error)
-                setError('Failed to create call. Please try again.')
+                console.error('Ошибка создания звонка:', error)
+                setError('Не удалось создать звонок. Пожалуйста, попробуйте снова.')
             } finally {
                 setLoading(false)
             }
         } else {
-            setError('Please fill in all required fields.')
+            setError('Пожалуйста, заполните все обязательные поля.')
         }
     }
 
@@ -246,19 +247,19 @@ export default function AdminPanel() {
             setError(null)
             try {
                 const response = await axios.post('/api/tariffs', newTariff)
-                console.log('Tariff created successfully:', response.data)
-                alert('Tariff created successfully!')
+                console.log('Тариф успешно создан:', response.data)
+                alert('Тариф успешно создан!')
                 setIsCreateTariffModalOpen(false)
                 setNewTariff({name:'', start_date:'', day_rate_start:0, night_rate_start:0, end_date:'', day_rate_end:0, night_rate_end:0, zone_code:''})
                 fetchTariffs()
             } catch (error) {
-                console.error('Error creating tariff:', error)
-                setError('Failed to create tariff. Please try again.')
+                console.error('Ошибка создания тарифа:', error)
+                setError('Не удалось создать тариф. Пожалуйста, попробуйте снова.')
             } finally {
                 setLoading(false)
             }
         } else {
-            setError('Please fill in all required fields.')
+            setError('Пожалуйста, заполните все обязательные поля.')
         }
     }
 
@@ -267,11 +268,11 @@ export default function AdminPanel() {
         setError(null);
         try {
             await axios.delete(`/api/tariffs?zone_code=${encodeURIComponent(zoneCode)}`);
-            alert('Tariff deleted successfully!');
+            alert('Тариф успешно удален!');
             fetchTariffs();
         } catch (error) {
-            console.error('Error deleting tariff:', error);
-            setError('Failed to delete tariff. Please try again.');
+            console.error('Ошибка удаления тарифа:', error);
+            setError('Не удалось удалить тариф. Пожалуйста, попробуйте снова.');
         } finally {
             setLoading(false);
         }
@@ -279,10 +280,10 @@ export default function AdminPanel() {
 
     return (
         <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
+            {/* Боковая панель */}
             <div className="w-64 bg-white shadow-md">
                 <div className="p-4">
-                    <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+                    <h1 className="text-2xl font-bold mb-4">Панель администратора</h1>
                     <nav>
                         <ul className="space-y-2">
                             <li>
@@ -291,7 +292,7 @@ export default function AdminPanel() {
                                     className={`flex items-center w-full p-2 rounded ${activeSection === 'calls' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
                                 >
                                     <Phone className="mr-2" />
-                                    Calls
+                                    Звонки
                                 </button>
                             </li>
                             <li>
@@ -300,7 +301,7 @@ export default function AdminPanel() {
                                     className={`flex items-center w-full p-2 rounded ${activeSection === 'tariffs' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'}`}
                                 >
                                     <Tag className="mr-2" />
-                                    Tariffs
+                                    Тарифы
                                 </button>
                             </li>
                         </ul>
@@ -312,23 +313,23 @@ export default function AdminPanel() {
                         className="flex items-center text-red-500 hover:text-red-700"
                     >
                         <LogOut className="mr-2" />
-                        Logout
+                        Выйти
                     </button>
                 </div>
             </div>
 
-            {/* Main content */}
+            {/* Основное содержимое */}
             <div className="flex-1 overflow-y-auto p-8">
                 {activeSection === 'calls' && (
                     <div className="space-y-8">
                         <div className="bg-white shadow-md rounded-lg p-6">
-                            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Subscriber Search</h2>
+                            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Поиск абонента</h2>
                             <div className="flex items-center mb-4">
                                 <input
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Enter full or partial subscriber ID"
+                                    placeholder="Введите полный или частичный ID абонента"
                                     className="border rounded-l p-2 flex-grow"
                                 />
                                 <button
@@ -347,7 +348,7 @@ export default function AdminPanel() {
                                             onClick={() => handleSubscriberSelect(result)}
                                             className="cursor-pointer hover:bg-gray-100 p-2 transition-colors"
                                         >
-                                            Subscriber ID: {result.subscriber_id}
+                                            ID абонента: {result.subscriber_id}
                                         </li>
                                     ))}
                                 </ul>
@@ -357,13 +358,13 @@ export default function AdminPanel() {
                         {selectedSubscriber && (
                             <div className="bg-white shadow-md rounded-lg p-6">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-2xl font-semibold text-gray-800">Date Range Selection</h2>
+                                    <h2 className="text-2xl font-semibold text-gray-800">Выбор диапазона дат</h2>
                                     <button
                                         onClick={() => setIsCreateCallModalOpen(true)}
                                         className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
                                     >
                                         <Plus className="mr-2 h-5 w-5"/>
-                                        Create Call
+                                        Создать звонок
                                     </button>
                                 </div>
                                 <div className="flex items-center space-x-4">
@@ -375,7 +376,7 @@ export default function AdminPanel() {
                                             selectsStart
                                             startDate={startDate}
                                             endDate={endDate}
-                                            placeholderText="Start Date"
+                                            placeholderText="Дата начала"
                                             className="border rounded p-2"
                                         />
                                     </div>
@@ -388,7 +389,7 @@ export default function AdminPanel() {
                                             startDate={startDate}
                                             endDate={endDate}
                                             minDate={startDate}
-                                            placeholderText="End Date"
+                                            placeholderText="Дата окончания"
                                             className="border rounded p-2"
                                         />
                                     </div>
@@ -398,7 +399,7 @@ export default function AdminPanel() {
 
                         {loading && (
                             <div className="bg-blue-100 text-blue-700 p-4 rounded mb-4">
-                                Loading...
+                                Загрузка...
                             </div>
                         )}
                         {error && (
@@ -410,7 +411,7 @@ export default function AdminPanel() {
                         {calls.length > 0 && (
                             <div className="bg-white shadow-md rounded-lg p-6">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-2xl font-semibold text-gray-800">Select Calls</h2>
+                                    <h2 className="text-2xl font-semibold text-gray-800">Выбрать звонки</h2>
                                     <button
                                         onClick={() => setExpandedCalls(!expandedCalls)}
                                         className="text-blue-500 hover:text-blue-700 transition-colors"
@@ -425,13 +426,13 @@ export default function AdminPanel() {
                                                 onClick={handleSelectAll}
                                                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                                             >
-                                                Select All
+                                                Выбрать все
                                             </button>
                                             <button
                                                 onClick={handleDeselectAll}
                                                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
                                             >
-                                                Deselect All
+                                                Отменить все
                                             </button>
                                         </div>
                                         <ul className="max-h-60 overflow-y-auto border rounded p-2">
@@ -447,7 +448,7 @@ export default function AdminPanel() {
                                                             <Square className="h-5 w-5"/>
                                                         )}
                                                     </button>
-                                                    <span>{new Date(call.call_date).toLocaleDateString()} - {call.start_time} - {call.duration} seconds</span>
+                                                    <span>{new Date(call.call_date).toLocaleDateString()} - {call.start_time} - {call.duration} секунд</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -458,13 +459,13 @@ export default function AdminPanel() {
 
                         {selectedCalls.length > 0 && (
                             <div className="bg-white shadow-md rounded-lg p-6">
-                                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bill Generation</h2>
+                                <h2 className="text-2xl font-semibold mb-4 text-gray-800">Генерация счета</h2>
                                 <button
                                     onClick={generateBill}
                                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
                                     disabled={loading}
                                 >
-                                    Generate Bill
+                                    Сгенерировать счет
                                 </button>
                             </div>
                         )}
@@ -473,34 +474,34 @@ export default function AdminPanel() {
 
                 {activeSection === 'bills' && (
                     <div className="bg-white shadow-md rounded-lg p-6">
-                        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Bills Management</h2>
-                        {/* Add bills management functionality here */}
+                        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Управление счетами</h2>
+                        {/* Добавьте функциональность управления счетами здесь */}
                     </div>
                 )}
 
                 {activeSection === 'tariffs' && (
                     <div className="bg-white shadow-md rounded-lg p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-semibold text-gray-800">Tariff Management</h2>
+                            <h2 className="text-2xl font-semibold text-gray-800">Управление тарифами</h2>
                             <button
                                 onClick={() => setIsCreateTariffModalOpen(true)}
                                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center"
                             >
                                 <Plus className="mr-2 h-5 w-5"/>
-                                Create Tariff
+                                Создать тариф
                             </button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full bg-white">
                                 <thead className="bg-gray-100">
                                 <tr>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Zone Code</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Name</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Start Date</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">End Date</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Day Rate</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Night Rate</th>
-                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Actions</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Код зоны</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Название</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата начала</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата окончания</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дневной тариф</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Ночной тариф</th>
+                                    <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Действия</th>
                                 </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
@@ -518,7 +519,7 @@ export default function AdminPanel() {
                                                     onClick={() => handleDeleteTariff(tariff.zone_code)}
                                                     className="text-red-500 hover:text-red-700"
                                                 >
-                                                    Delete
+                                                    Удалить
                                                 </button>
                                             </td>
                                         </tr>
@@ -526,7 +527,7 @@ export default function AdminPanel() {
                                 ) : (
                                     <tr>
                                         <td colSpan={7} className="py-4 px-4 text-sm text-gray-500 text-center">
-                                            No tariffs available
+                                            Нет доступных тарифов
                                         </td>
                                     </tr>
                                 )}
@@ -554,7 +555,7 @@ export default function AdminPanel() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-semibold text-gray-800">Bill Details</h2>
+                                <h2 className="text-2xl font-semibold text-gray-800">Детали счета</h2>
                                 <button onClick={() => setIsModalOpen(false)}
                                         className="text-gray-500 hover:text-gray-700">
                                     <X className="h-6 w-6"/>
@@ -562,50 +563,61 @@ export default function AdminPanel() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm font-medium text-gray-600">Period</p>
+                                    <p className="text-sm font-medium text-gray-600">Период</p>
                                     <p className="text-lg font-semibold text-gray-800">
                                         <Calendar className="inline-block mr-1 h-5 w-5"/>
                                         {format(new Date(bill.start_date), 'dd/MM/yyyy')} - {format(new Date(bill.end_date), 'dd/MM/yyyy')}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                                    <p className="text-sm font-medium text-gray-600">Общая сумма</p>
                                     <p className="text-lg font-semibold text-gray-800">
                                         <DollarSign className="inline-block mr-1 h-5 w-5"/>
                                         ${bill.totalAmount.toFixed(2)}
                                     </p>
                                 </div>
                             </div>
-                            <h3 className="text-xl font-semibold mb-4 text-gray-800">Call Details</h3>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white">
-                                    <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Date</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Time</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Duration</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Cost</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                    {bill.details.map((call, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.date), 'dd/MM/yyyy')}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">{call.time}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">{formatDuration(call.duration)}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">${call.cost.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
+                            {Object.entries(bill.details.reduce<Record<string, BillDetail[]>>((acc, call) => {
+                                if (!acc[call.tariffName]) {
+                                    acc[call.tariffName] = [];
+                                }
+                                acc[call.tariffName].push(call);
+                                return acc;
+                            }, {})).map(([tariffName, calls]) => (
+                                <div key={tariffName} className="mb-6">
+                                    <h4 className="text-lg font-semibold mb-2 text-gray-700">{tariffName}</h4>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full bg-white">
+                                            <thead className="bg-gray-100">
+                                            <tr>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Время</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Продолжительность</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Стоимость</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                            {calls.map((call, index) => (
+                                                <tr key={index} className="hover:bg-gray-50">
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.date), 'dd/MM/yyyy')}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{call.time}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{formatDuration(call.duration)}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">${call.cost.toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ))}
                             <div className="mt-6 flex justify-end">
                                 <button
                                     onClick={saveBill}
                                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                                     disabled={loading}
                                 >
-                                    Save Bill
+                                    Сохранить счет
                                 </button>
                             </div>
                         </motion.div>
@@ -630,7 +642,7 @@ export default function AdminPanel() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-semibold text-gray-800">Create New Call</h2>
+                                <h2 className="text-2xl font-semibold text-gray-800">Создать новый звонок</h2>
                                 <button onClick={() => setIsCreateCallModalOpen(false)}
                                         className="text-gray-500 hover:text-gray-700">
                                     <X className="h-6 w-6"/>
@@ -642,7 +654,7 @@ export default function AdminPanel() {
                             }} className="space-y-4">
                                 <div>
                                     <label htmlFor="call_date" className="block text-sm font-medium text-gray-700">
-                                        Call Date
+                                        Дата звонка
                                     </label>
                                     <input
                                         type="date"
@@ -655,7 +667,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="start_time" className="block text-sm font-medium text-gray-700">
-                                        Start Time
+                                        Время начала
                                     </label>
                                     <input
                                         type="time"
@@ -668,7 +680,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
-                                        Duration (seconds)
+                                        Продолжительность (секунды)
                                     </label>
                                     <input
                                         type="number"
@@ -681,7 +693,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="zone_code" className="block text-sm font-medium text-gray-700">
-                                        Zone Code
+                                        Код зоны
                                     </label>
                                     <select
                                         id="zone_code"
@@ -690,7 +702,7 @@ export default function AdminPanel() {
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                         required
                                     >
-                                        <option value="">Select a zone</option>
+                                        <option value="">Выберите зону</option>
                                         {tariffs.map((tariff) => (
                                             <option key={tariff.zone_code} value={tariff.zone_code}>
                                                 {tariff.zone_code}
@@ -704,7 +716,7 @@ export default function AdminPanel() {
                                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                                         disabled={loading}
                                     >
-                                        Create Call
+                                        Создать звонок
                                     </button>
                                 </div>
                             </form>
@@ -730,7 +742,7 @@ export default function AdminPanel() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-semibold text-gray-800">Create New Tariff</h2>
+                                <h2 className="text-2xl font-semibold text-gray-800">Создать новый тариф</h2>
                                 <button onClick={() => setIsCreateTariffModalOpen(false)}
                                         className="text-gray-500 hover:text-gray-700">
                                     <X className="h-6 w-6"/>
@@ -742,7 +754,7 @@ export default function AdminPanel() {
                             }} className="space-y-4">
                                 <div>
                                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                        Name
+                                        Название
                                     </label>
                                     <input
                                         type="text"
@@ -755,20 +767,20 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="zone_code" className="block text-sm font-medium text-gray-700">
-                                        Zone Code
+                                        Код зоны
                                     </label>
                                     <input
                                         type="text"
                                         id="zone_code"
                                         value={newTariff.zone_code || ''}
                                         onChange={(e) => setNewTariff({...newTariff, zone_code: e.target.value})}
-                                        className="mt-1 block w-fullborder border-gray-300 rounded-md shadow-sm p-2"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                         required
                                     />
                                 </div>
                                 <div>
                                     <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
-                                        Start Date
+                                        Дата начала
                                     </label>
                                     <input
                                         type="date"
@@ -781,7 +793,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="day_rate_start" className="block text-sm font-medium text-gray-700">
-                                        Day Rate (Start)
+                                        Дневной тариф (начало)
                                     </label>
                                     <input
                                         type="number"
@@ -795,7 +807,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="night_rate_start" className="block text-sm font-medium text-gray-700">
-                                        Night Rate (Start)
+                                        Ночной тариф (начало)
                                     </label>
                                     <input
                                         type="number"
@@ -809,7 +821,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
-                                        End Date
+                                        Дата окончания
                                     </label>
                                     <input
                                         type="date"
@@ -822,7 +834,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="day_rate_end" className="block text-sm font-medium text-gray-700">
-                                        Day Rate (End)
+                                        Дневной тариф (конец)
                                     </label>
                                     <input
                                         type="number"
@@ -836,7 +848,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div>
                                     <label htmlFor="night_rate_end" className="block text-sm font-medium text-gray-700">
-                                        Night Rate (End)
+                                        Ночной тариф (конец)
                                     </label>
                                     <input
                                         type="number"
@@ -854,7 +866,7 @@ export default function AdminPanel() {
                                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
                                         disabled={loading}
                                     >
-                                        Create Tariff
+                                        Создать тариф
                                     </button>
                                 </div>
                             </form>
@@ -865,3 +877,4 @@ export default function AdminPanel() {
         </div>
     )
 }
+
