@@ -5,7 +5,22 @@ import axios from 'axios'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Calendar, DollarSign, X, CheckSquare, Square, ChevronDown, ChevronUp, LogOut, Phone, Plus, Tag, FileText } from 'lucide-react'
+import {
+    Search,
+    Calendar,
+    DollarSign,
+    X,
+    CheckSquare,
+    Square,
+    ChevronDown,
+    ChevronUp,
+    LogOut,
+    Phone,
+    Plus,
+    Tag,
+    FileText,
+    Home, PersonStanding
+} from 'lucide-react'
 import { Subscriber, Call, Tariff, Bill, Rate, BillDetail } from '../types/index'
 import { format } from 'date-fns'
 import Cookies from "js-cookie"
@@ -165,7 +180,9 @@ export default function AdminPanel() {
                     details,
                     start_date: startDate.toISOString(),
                     end_date: endDate.toISOString(),
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    subscriberAddress: selectedSubscriber.raw_user_meta_data?.address || "",
+                    subscriberName: selectedSubscriber.raw_user_meta_data?.full_name || ""
                 })
                 setIsModalOpen(true)
             }
@@ -576,6 +593,20 @@ export default function AdminPanel() {
                                         ${bill.totalAmount.toFixed(2)}
                                     </p>
                                 </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Имя подписчика</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <PersonStanding className="inline-block mr-1 h-5 w-5"/>
+                                        {bill.subscriberName}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Адресс подписчика</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <Home className="inline-block mr-1 h-5 w-5"/>
+                                        {bill.subscriberAddress}
+                                    </p>
+                                </div>
                             </div>
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
                             {Object.entries(bill.details.reduce<Record<string, BillDetail[]>>((acc, call) => {
@@ -877,4 +908,3 @@ export default function AdminPanel() {
         </div>
     )
 }
-

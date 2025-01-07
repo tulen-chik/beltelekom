@@ -13,10 +13,10 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
         .from('subscribers_profiles')
-        .select('subscriber_id')
+        .select('*')
         .filter('subscriber_id_substring', 'like', `%${search}%`) // Поиск по substring
         .limit(10)
-
+    console.log(data)
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }

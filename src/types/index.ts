@@ -1,10 +1,16 @@
 export type Rate = number | null;
 
+interface RawMetaData {
+    address: string;
+    full_name: string;
+}
+
 export interface Subscriber {
     subscriber_id: string;
     category: '0.5' | '1'; // Значения из столбца category
     role: 'admin' | 'user'; // Значения из столбца role
     subscriber_id_substring: string; // Подстрока subscriber_id
+    raw_user_meta_data: RawMetaData | undefined;
 }
 
 export interface Call {
@@ -36,10 +42,12 @@ export interface BillDetail {
 }
 
 export interface Bill {
-    id: string; // UUID билла
-    totalAmount: number; // Общая сумма
-    details: BillDetail[]; // Список деталей билла
-    start_date: string; // Дата начала периода билла
-    end_date: string; // Дата окончания периода билла
-    created_at: string; // Дата и время создания
+    id: string;
+    totalAmount: number;
+    details: BillDetail[];
+    start_date: string;
+    end_date: string;
+    created_at: string;
+    subscriberName: string;
+    subscriberAddress: string;
 }

@@ -1,19 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarDays, Clock, DollarSign, PhoneCall, X, LogOut } from 'lucide-react'
-import {router} from "next/client";
-import Cookies from "js-cookie";
-import {useRouter} from "next/navigation";
-
-interface CallDetail {
-    cost: number
-    date: string
-    time: string
-    duration: number
-}
+import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
+import {Subscriber} from "@/types";
 
 interface Bill {
     id: string
@@ -21,39 +15,55 @@ interface Bill {
     start_date: string
     end_date: string
     amount: number
-    details: CallDetail[]
+    details: {
+        date: string
+        time: string
+        duration: number
+        cost: number
+        tariffName: string
+    }[]
     created_at: string
+    subscriberName: string
+    subscriberAddress: string
 }
 
 interface UserBillsComponentProps {
     initialBills: Bill[]
-    userId: string
+    userId: Subscriber | null
+}
+
+const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const remainingSeconds = seconds % 60
+    return `${hours}ч ${minutes}м ${remainingSeconds}с`
 }
 
 export default function UserBillsComponent({ initialBills, userId }: UserBillsComponentProps) {
-    const [bills] = useState<Bill[]>(initialBills)
+    const [bills, setBills] = useState<Bill[]>(initialBills)
     const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-
-    const formatDuration = (seconds: number): string => {
-        const hours = Math.floor(seconds / 3600)
-        const minutes = Math.floor((seconds % 3600) / 60)
-        const remainingSeconds = seconds % 60
-        return `${hours}h ${minutes}m ${remainingSeconds}s`
-    }
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
 
     useEffect(() => {
-        if (selectedBill) {
-            setIsModalOpen(true)
-        }
-    }, [selectedBill])
+        setBills(initialBills)
+
+
+    }, [initialBills])
+
+    console.log(userId)
+
+    const handleBillSelect = (bill: Bill) => {
+        setSelectedBill(bill)
+        setIsModalOpen(true)
+    }
 
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedBill(null)
     }
-
-    const router = useRouter()
 
     const handleLogout = () => {
         Cookies.remove('userRole')
@@ -81,7 +91,11 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
 
             <div className="bg-white shadow-md rounded-lg p-6">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">История счетов</h2>
-                {bills.length === 0 ? (
+                {loading ? (
+                    <p className="text-center text-gray-600">Загрузка счетов...</p>
+                ) : error ? (
+                    <p className="text-center text-red-500">{error}</p>
+                ) : bills.length === 0 ? (
                     <p className="text-center text-gray-600">Счета не найдены.</p>
                 ) : (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
@@ -89,7 +103,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                             <motion.div
                                 key={bill.id}
                                 className="cursor-pointer p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-gray-50"
-                                onClick={() => setSelectedBill(bill)}
+                                onClick={() => handleBillSelect(bill)}
                                 whileHover={{scale: 1.02}}
                                 whileTap={{scale: 0.98}}
                             >
@@ -157,36 +171,54 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm font-medium text-gray-600">ID подписчика</p>
+                                    <p className="text-sm font-medium text-gray-600">Имя подписчика</p>
                                     <p className="text-lg font-semibold text-gray-800">
-                                        <PhoneCall className="inline-block mr-1 h-5 w-5"/>
-                                        {selectedBill.subscriber_id}
+                                        <PersonStanding className="inline-block mr-1 h-5 w-5"/>
+                                        {userId?.raw_user_meta_data?.full_name}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Адрес подписчика</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <Home className="inline-block mr-1 h-5 w-5"/>
+                                        {userId?.raw_user_meta_data?.address}
                                     </p>
                                 </div>
                             </div>
-                            <h3 className="text-xl font-semibold mb-4 text-gray-800">Звонки</h3>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white">
-                                    <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Время</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Продолжительность</th>
-                                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Стоимость</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                    {selectedBill.details.map((call, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.date), 'dd/MM/yyyy')}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">{call.time}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">{formatDuration(call.duration)}</td>
-                                            <td className="py-2 px-4 text-sm text-gray-800">${call.cost.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
+                            {Object.entries(selectedBill.details.reduce<Record<string, Bill['details'][0][]>>((acc, call) => {
+                                if (!acc[call.tariffName]) {
+                                    acc[call.tariffName] = [];
+                                }
+                                acc[call.tariffName].push(call);
+                                return acc;
+                            }, {})).map(([tariffName, calls]) => (
+                                <div key={tariffName} className="mb-6">
+                                    <h4 className="text-lg font-semibold mb-2 text-gray-700">{tariffName}</h4>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full bg-white">
+                                            <thead className="bg-gray-100">
+                                            <tr>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Время</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Продолжительность</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Стоимость</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                            {calls.map((call, index) => (
+                                                <tr key={index} className="hover:bg-gray-50">
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.date), 'dd/MM/yyyy')}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{call.time}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{formatDuration(call.duration)}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">${call.cost.toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ))}
                         </motion.div>
                     </motion.div>
                 )}

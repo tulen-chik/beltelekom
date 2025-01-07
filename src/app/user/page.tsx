@@ -33,6 +33,12 @@ export default async function UserBillsPage() {
         .from('bills')
         .select('*')
         .eq('subscriber_id', session.user.id)
+
+    const { data, error: userError } = await supabase
+        .from('subscribers_profiles')
+        .select('*')
+        .filter('subscriber_id_substring', 'eq', session.user.id) // Поиск по substring
+        .single()
     if (error) {
         console.error('Error fetching bills:', error)
     } else {
@@ -41,5 +47,5 @@ export default async function UserBillsPage() {
             console.log('First bill:', bills[0])
         }
     }
-    return <UserBillsComponent initialBills={bills || []} userId={session.user.id} />
+    return <UserBillsComponent initialBills={bills || []} userId={data} />
 }
