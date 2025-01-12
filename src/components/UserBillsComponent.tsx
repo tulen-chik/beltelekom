@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home } from 'lucide-react'
+import {CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone} from 'lucide-react'
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import {Subscriber} from "@/types";
@@ -182,6 +182,13 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                     <p className="text-lg font-semibold text-gray-800">
                                         <Home className="inline-block mr-1 h-5 w-5"/>
                                         {userId?.raw_user_meta_data?.address}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Номер телефона</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <Phone className="inline-block mr-1 h-5 w-5"/>
+                                        {userId?.raw_user_meta_data?.phone_number}
                                     </p>
                                 </div>
                             </div>

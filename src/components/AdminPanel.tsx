@@ -391,6 +391,7 @@ export default function AdminPanel() {
                                             selected={startDate}
                                             onChange={(date: Date | null) => setStartDate(date ?? undefined)}
                                             selectsStart
+                                            dateFormat={'dd/MM/yyyy'}
                                             startDate={startDate}
                                             endDate={endDate}
                                             placeholderText="Дата начала"
@@ -406,6 +407,7 @@ export default function AdminPanel() {
                                             startDate={startDate}
                                             endDate={endDate}
                                             minDate={startDate}
+                                            dateFormat={'dd/MM/yyyy'}
                                             placeholderText="Дата окончания"
                                             className="border rounded p-2"
                                         />
@@ -605,6 +607,13 @@ export default function AdminPanel() {
                                     <p className="text-lg font-semibold text-gray-800">
                                         <Home className="inline-block mr-1 h-5 w-5"/>
                                         {bill.subscriberAddress}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Номер телефона</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <Phone className="inline-block mr-1 h-5 w-5"/>
+                                        {selectedSubscriber?.raw_user_meta_data?.phone_number}
                                     </p>
                                 </div>
                             </div>

@@ -3,6 +3,7 @@ export type Rate = number | null;
 interface RawMetaData {
     address: string;
     full_name: string;
+    phone_number: string;
 }
 
 export interface Subscriber {
