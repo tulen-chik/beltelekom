@@ -365,7 +365,7 @@ export default function AdminPanel() {
                                             onClick={() => handleSubscriberSelect(result)}
                                             className="cursor-pointer hover:bg-gray-100 p-2 transition-colors"
                                         >
-                                            ID абонента: {result.subscriber_id.substring(0, 7)}
+                                            ID абонента: {result.raw_user_meta_data?.phone_number}
                                         </li>
                                     ))}
                                 </ul>

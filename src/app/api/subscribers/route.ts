@@ -11,12 +11,15 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Search parameter is required' }, { status: 400 })
     }
 
+    // Searching by phone number in the raw_user_meta_data JSONB field
     const { data, error } = await supabase
         .from('subscribers_profiles')
         .select('*')
-        .filter('subscriber_id_substring', 'like', `%${search}%`) // Поиск по substring
+        .filter('raw_user_meta_data->>phone_number', 'like', `%${search}%`) // Search by phone_number
         .limit(10)
+
     console.log(data)
+
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
