@@ -8,6 +8,7 @@ interface RawMetaData {
 
 export interface Subscriber {
     subscriber_id: string;
+    money: number;
     category: '0.5' | '1'; // Значения из столбца category
     role: 'admin' | 'user'; // Значения из столбца role
     subscriber_id_substring: string; // Подстрока subscriber_id
@@ -43,12 +44,21 @@ export interface BillDetail {
 }
 
 export interface Bill {
-    id: string;
-    totalAmount: number;
-    details: BillDetail[];
-    start_date: string;
-    end_date: string;
-    created_at: string;
-    subscriberName: string;
-    subscriberAddress: string;
+    id: string
+    subscriber_id: string
+    start_date: string
+    end_date: string
+    amount: number
+    details: {
+        calls: {
+            id: number
+            duration: number
+            call_date: string
+            zone_code: string
+            start_time: string
+        }[]
+    }
+    created_at: string
+    subscriberName: string
+    subscriberAddress: string
 }

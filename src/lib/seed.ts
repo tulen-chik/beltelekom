@@ -22,34 +22,6 @@ async function seedDatabase() {
                 full_name: 'Сидоров Сидор Сидорович',
                 address: 'ул. Пользовательская, д. 3, кв. 4',
                 phone_number: '+375291146913'
-            },
-            {
-                email: 'user2@example.com',
-                password: 'user234',
-                full_name: 'Николаев Николай Николаевич',
-                address: 'ул. Пользовательская, д. 4, кв. 5',
-                phone_number: '+375291146914'
-            },
-            {
-                email: 'user3@example.com',
-                password: 'user345',
-                full_name: 'Михайлов Михаил Михайлович',
-                address: 'ул. Пользовательская, д. 5, кв. 6',
-                phone_number: '+375291146915'
-            },
-            {
-                email: 'user4@example.com',
-                password: 'user456',
-                full_name: 'Алексеев Алексей Алексеевич',
-                address: 'ул. Пользовательская, д. 6, кв. 7',
-                phone_number: '+375291146916'
-            },
-            {
-                email: 'user5@example.com',
-                password: 'user567',
-                full_name: 'Федоров Федор Федорович',
-                address: 'ул. Пользовательская, д. 7, кв. 8',
-                phone_number: '+375291146917'
             }
         ];
 
@@ -71,7 +43,7 @@ async function seedDatabase() {
             return {
                 subscriber_id: user.user.id,
                 category: '0.5',
-                role: 'user',
+                role: 'admin',
                 raw_user_meta_data: {
                     address: userData.address,
                     full_name: userData.full_name,

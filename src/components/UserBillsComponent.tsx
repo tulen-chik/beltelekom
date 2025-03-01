@@ -16,12 +16,14 @@ interface Bill {
     end_date: string
     amount: number
     details: {
-        date: string
-        time: string
-        duration: number
-        cost: number
-        tariffName: string
-    }[]
+        calls: {
+            id: number
+            duration: number
+            call_date: string
+            zone_code: string
+            start_time: string
+        }[]
+    }
     created_at: string
     subscriberName: string
     subscriberAddress: string
@@ -71,6 +73,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         router.push('/')
     }
 
+    // @ts-ignore
     return (
         <div className="container mx-auto p-4 max-w-4xl">
             <div className="bg-white shadow-md rounded-lg p-6 mb-8">
@@ -193,15 +196,16 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                 </div>
                             </div>
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
-                            {Object.entries(selectedBill.details.reduce<Record<string, Bill['details'][0][]>>((acc, call) => {
-                                if (!acc[call.tariffName]) {
-                                    acc[call.tariffName] = [];
+                            {Object.entries(selectedBill.details.calls.reduce<Record<string, any[]>>((acc, call) => {
+                                const tariffName = call.zone_code; // Используйте zone_code как имя тарифа
+                                if (!acc[tariffName]) {
+                                    acc[tariffName] = [];
                                 }
-                                acc[call.tariffName].push(call);
+                                acc[tariffName].push(call);
                                 return acc;
                             }, {})).map(([tariffName, calls]) => (
                                 <div key={tariffName} className="mb-6">
-                                    <h4 className="text-lg font-semibold mb-2 text-gray-700">{tariffName}</h4>
+                                    <h4 className="text-lg font-semibold mb-2 text-gray-700">Тариф: {tariffName}</h4>
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full bg-white">
                                             <thead className="bg-gray-100">
@@ -209,16 +213,14 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                                 <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата</th>
                                                 <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Время</th>
                                                 <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Продолжительность</th>
-                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Стоимость</th>
                                             </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200">
                                             {calls.map((call, index) => (
                                                 <tr key={index} className="hover:bg-gray-50">
-                                                    <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.date), 'dd/MM/yyyy')}</td>
-                                                    <td className="py-2 px-4 text-sm text-gray-800">{call.time}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{format(new Date(call.call_date), 'dd/MM/yyyy')}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{call.start_time}</td>
                                                     <td className="py-2 px-4 text-sm text-gray-800">{formatDuration(call.duration)}</td>
-                                                    <td className="py-2 px-4 text-sm text-gray-800">${call.cost.toFixed(2)}</td>
                                                 </tr>
                                             ))}
                                             </tbody>

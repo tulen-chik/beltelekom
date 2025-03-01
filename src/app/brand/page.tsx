@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Phone } from 'lucide-react'
 import Header from "@/components/header";
 
 export default function Component() {

@@ -1,50 +1,90 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Header from '@/components/header'
-import Cookies from 'js-cookie'
+import type React from "react"
 
-export default function LoginPage() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Header from "@/components/header"
+import { supabase } from "@/lib/supabase"
+import Cookies from "js-cookie"
+
+export default function AuthPage() {
+    const [isLogin, setIsLogin] = useState(true)
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [fullName, setFullName] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
+    const [address, setAddress] = useState("")
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState('')
+    const [error, setError] = useState("")
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
-        setError('')
+        setError("")
+
+        if (!isLogin && password !== confirmPassword) {
+            setError("Пароли не совпадают")
+            setIsLoading(false)
+            return
+        }
 
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            })
+            if (isLogin) {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
 
-            const data = await response.json()
-            console.log(data)
+                if (error) throw error
 
-            if (response.ok) {
-                // Store the token and user profile in cookies
-                Cookies.set('userRole', data.profile.role, { expires: 7 })
-                Cookies.set('userProfile', JSON.stringify(data.profile), { expires: 7 })
+                const { data: profile, error: profileError } = await supabase
+                    .from("subscribers_profiles")
+                    .select("*")
+                    .eq("subscriber_id", data.user.id)
+                    .single()
 
-                // Redirect based on user role
-                if (data.profile.role === 'admin') {
-                    router.push('/admin')
+                if (profileError) throw profileError
+
+                Cookies.set("userRole", profile.role, { expires: 7 })
+                Cookies.set("userProfile", JSON.stringify(profile), { expires: 7 })
+
+                if (profile.role === "admin") {
+                    router.push("/admin")
                 } else {
-                    router.push('/user')
+                    router.push("/user")
                 }
             } else {
-                setError(data.message || "Неверный логин или пароль")
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                })
+
+                if (error) throw error
+
+                const { error: profileError } = await supabase.from("subscribers_profiles").insert([
+                    {
+                        subscriber_id: data.user?.id,
+                        category: "1",
+                        role: "user",
+                        raw_user_meta_data: {
+                            full_name: fullName,
+                            phone_number: phoneNumber,
+                            address: address,
+                        },
+                        subscriber_id_substring: data.user?.id,
+                    },
+                ])
+
+                if (profileError) throw profileError
+
+                setIsLogin(true)
+                setError("Регистрация успешна. Пожалуйста, войдите в систему.")
             }
         } catch (error) {
-            setError("Произошла ошибка при входе в систему")
+            setError((error as Error).message || (isLogin ? "Неверный логин или пароль" : "Ошибка при регистрации"))
         } finally {
             setIsLoading(false)
         }
@@ -57,25 +97,20 @@ export default function LoginPage() {
             <main className="flex-grow flex items-center justify-center px-4">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center">
-                        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                            Вход в систему
-                        </h2>
+                        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">{isLogin ? "Вход в систему" : "Регистрация"}</h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            Введите ваш электронный адрес и пароль
+                            {isLogin ? "Введите ваш электронный адрес и пароль" : "Создайте новую учетную запись"}
                         </p>
                     </div>
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="space-y-4">
                             <div>
-                                <label
-                                    htmlFor="subscriber_number"
-                                    className="block text-2xl font-medium text-gray-900"
-                                >
+                                <label htmlFor="email" className="block text-2xl font-medium text-gray-900">
                                     Электронный адрес
                                 </label>
                                 <input
-                                    id="subscriber_number"
-                                    type="text"
+                                    id="email"
+                                    type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -85,10 +120,7 @@ export default function LoginPage() {
                             </div>
 
                             <div>
-                                <label
-                                    htmlFor="password"
-                                    className="block text-2xl font-medium text-gray-900"
-                                >
+                                <label htmlFor="password" className="block text-2xl font-medium text-gray-900">
                                     Пароль
                                 </label>
                                 <input
@@ -101,19 +133,88 @@ export default function LoginPage() {
                                     disabled={isLoading}
                                 />
                             </div>
+
+                            {!isLogin && (
+                                <>
+                                    <div>
+                                        <label htmlFor="confirmPassword" className="block text-2xl font-medium text-gray-900">
+                                            Подтвердите пароль
+                                        </label>
+                                        <input
+                                            id="confirmPassword"
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            required
+                                            className="mt-1 block w-full text-lg py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="fullName" className="block text-2xl font-medium text-gray-900">
+                                            Полное имя
+                                        </label>
+                                        <input
+                                            id="fullName"
+                                            type="text"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            required
+                                            className="mt-1 block w-full text-lg py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="phoneNumber" className="block text-2xl font-medium text-gray-900">
+                                            Номер телефона
+                                        </label>
+                                        <input
+                                            id="phoneNumber"
+                                            type="tel"
+                                            value={phoneNumber}
+                                            onChange={(e) => setPhoneNumber(e.target.value)}
+                                            required
+                                            className="mt-1 block w-full text-lg py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="address" className="block text-2xl font-medium text-gray-900">
+                                            Адрес
+                                        </label>
+                                        <input
+                                            id="address"
+                                            type="text"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                            required
+                                            className="mt-1 block w-full text-lg py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
 
-                        {error && (
-                            <div className="text-red-600 text-center">{error}</div>
-                        )}
+                        {error && <div className="text-red-600 text-center">{error}</div>}
 
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center space-y-4">
                             <button
                                 type="submit"
-                                className="w-32 h-12 text-lg bg-gray-200 hover:bg-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="w-48 h-12 text-lg bg-gray-200 hover:bg-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 disabled={isLoading}
                             >
-                                {isLoading ? "Вход..." : "Войти"}
+                                {isLoading ? "Загрузка..." : isLogin ? "Войти" : "Зарегистрироваться"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsLogin(!isLogin)
+                                    setError("")
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                            >
+                                {isLogin ? "Создать новый аккаунт" : "Уже есть аккаунт? Войти"}
                             </button>
                         </div>
                     </form>
@@ -122,3 +223,4 @@ export default function LoginPage() {
         </div>
     )
 }
+
