@@ -95,9 +95,11 @@ export default function BillsSection() {
                     .lte("call_date", endDate.toISOString().split("T")[0])
 
                 if (error) throw error
+
                 setCalls(data || [])
-                if (data.length === 0) {
-                    setError("Звонки за выбранный период не найдены.")
+
+                if (!data || data.length === 0) {
+                    setError("Звонков за выбранный период не найдено")
                 }
             } catch (error) {
                 console.error("Ошибка получения звонков:", error)
@@ -173,6 +175,14 @@ export default function BillsSection() {
         const details: Bill["details"] = []
 
         try {
+            // Сортируем звонки по дате для определения диапазона
+            const sortedCalls = [...selectedCalls].sort((a, b) =>
+                new Date(a.call_date).getTime() - new Date(b.call_date).getTime()
+            )
+
+            const oldestCallDate = sortedCalls[0]?.call_date
+            const newestCallDate = sortedCalls[sortedCalls.length - 1]?.call_date
+
             for (const call of selectedCalls) {
                 const { data: tariff, error } = await supabase
                     .from("tariffs")
@@ -201,11 +211,11 @@ export default function BillsSection() {
                 }
             }
 
-            if (selectedSubscriber && startDate && endDate) {
+            if (selectedSubscriber && oldestCallDate && newestCallDate) {
                 setNewBill({
                     subscriber_id: selectedSubscriber.subscriber_id,
-                    start_date: startDate.toISOString().split("T")[0],
-                    end_date: endDate.toISOString().split("T")[0],
+                    start_date: oldestCallDate,
+                    end_date: newestCallDate,
                     amount: totalAmount,
                     details,
                     paid: false,
@@ -370,7 +380,7 @@ export default function BillsSection() {
                                         onClick={handleSearch}
                                         className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 transition-colors"
                                     >
-                                        <Search className="h-5 w-5" />
+                                        <Search className="h-5 w-5"/>
                                     </button>
                                 </div>
                                 {searchResults.length > 0 && (
@@ -426,7 +436,7 @@ export default function BillsSection() {
                             </div>
 
                             {/* Список звонков */}
-                            {calls.length > 0 && (
+                            {calls.length > 0 ? (
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-2">Звонки</h3>
                                     <CallsList
@@ -436,6 +446,10 @@ export default function BillsSection() {
                                         onSelectAll={handleSelectAll}
                                         onDeselectAll={handleDeselectAll}
                                     />
+                                </div>
+                            ) : (
+                                <div className="mt-4 p-4 border rounded bg-yellow-50 text-yellow-800">
+                                    <p>Звонков за выбранный период не найдено</p>
                                 </div>
                             )}
 
@@ -462,35 +476,27 @@ export default function BillsSection() {
                                     type="checkbox"
                                     id="paid"
                                     checked={newBill.paid || false}
-                                    onChange={(e) => setNewBill({ ...newBill, paid: e.target.checked })}
+                                    onChange={(e) => setNewBill({...newBill, paid: e.target.checked})}
                                     className="mt-1 block"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700">
                                     Дата начала
                                 </label>
-                                <input
-                                    type="date"
-                                    id="start_date"
-                                    value={newBill.start_date || ""}
-                                    onChange={(e) => setNewBill({ ...newBill, start_date: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required
-                                />
+                                <div
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100">
+                                    {newBill.start_date || "Не определено"}
+                                </div>
                             </div>
                             <div>
-                                <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700">
                                     Дата окончания
                                 </label>
-                                <input
-                                    type="date"
-                                    id="end_date"
-                                    value={newBill.end_date || ""}
-                                    onChange={(e) => setNewBill({ ...newBill, end_date: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required
-                                />
+                                <div
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100">
+                                    {newBill.end_date || "Не определено"}
+                                </div>
                             </div>
                             <div>
                                 <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
@@ -500,9 +506,13 @@ export default function BillsSection() {
                                     type="number"
                                     id="amount"
                                     value={newBill.amount || 0}
-                                    onChange={(e) => setNewBill({ ...newBill, amount: Number.parseFloat(e.target.value) })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                    onChange={(e) => setNewBill({
+                                        ...newBill,
+                                        amount: Number.parseFloat(e.target.value)
+                                    })}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-gray-100"
                                     required
+                                    readOnly // Add this attribute
                                 />
                             </div>
                             <div className="flex justify-end space-x-2">

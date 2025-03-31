@@ -1,11 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UserBillsComponent from '@/components/UserBillsComponent'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import {createClient} from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-
+import {supabase} from "@/lib/supabase";
 
 export default async function UserBillsPage() {
     // Await the cookies

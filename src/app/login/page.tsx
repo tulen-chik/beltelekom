@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
@@ -16,6 +15,7 @@ export default function AuthPage() {
     const [fullName, setFullName] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
     const [address, setAddress] = useState("")
+    const [isAdmin, setIsAdmin] = useState(false) // Новое состояние для чекбокса
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
@@ -40,6 +40,7 @@ export default function AuthPage() {
 
                 if (error) throw error
 
+                // Проверка на удаленного пользователя
                 const { data: profile, error: profileError } = await supabase
                     .from("subscribers_profiles")
                     .select("*")
@@ -47,6 +48,10 @@ export default function AuthPage() {
                     .single()
 
                 if (profileError) throw profileError
+
+                if (profile.deleted) {
+                    throw new Error("Этот аккаунт был удален")
+                }
 
                 Cookies.set("userRole", profile.role, { expires: 7 })
                 Cookies.set("userProfile", JSON.stringify(profile), { expires: 7 })
@@ -60,6 +65,13 @@ export default function AuthPage() {
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            phone_number: phoneNumber,
+                            address: address,
+                        }
+                    }
                 })
 
                 if (error) throw error
@@ -68,7 +80,7 @@ export default function AuthPage() {
                     {
                         subscriber_id: data.user?.id,
                         category: "1",
-                        role: "user",
+                        role: isAdmin ? "admin" : "user", // Используем состояние чекбокса
                         raw_user_meta_data: {
                             full_name: fullName,
                             phone_number: phoneNumber,
@@ -192,6 +204,19 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                     </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            id="isAdmin"
+                                            type="checkbox"
+                                            checked={isAdmin}
+                                            onChange={(e) => setIsAdmin(e.target.checked)}
+                                            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            disabled={isLoading}
+                                        />
+                                        <label htmlFor="isAdmin" className="ml-2 block text-lg text-gray-900">
+                                            Зарегистрироваться как администратор
+                                        </label>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -223,4 +248,3 @@ export default function AuthPage() {
         </div>
     )
 }
-
