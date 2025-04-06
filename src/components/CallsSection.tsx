@@ -8,7 +8,7 @@ import DateRangePicker from "./DateRangePicker"
 
 export default function CallsSection() {
     const [calls, setCalls] = useState<Call[]>([])
-    const [tariffs, setTariffs] = useState<Tariff[]>([]) // Состояние для хранения тарифов
+    const [tariffs, setTariffs] = useState<Tariff[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | null>(null)
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -60,21 +60,29 @@ export default function CallsSection() {
 
     useEffect(() => {
         fetchCalls()
-        fetchTariffs() // Загружаем тарифы при монтировании компонента
+        fetchTariffs()
     }, [])
 
-    // Поиск абонентов
+    // Поиск абонентов по номеру телефона и имени
     const handleSearch = async () => {
         setLoading(true)
         setError(null)
         try {
+            // Сначала получаем всех абонентов
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
-                .ilike("subscriber_id_substring", `%${searchTerm}%`)
 
             if (error) throw error
-            setSearchResults(data || [])
+
+            // Фильтруем на клиенте
+            const filtered = data?.filter(subscriber => {
+                const phone = subscriber.raw_user_meta_data?.phone_number || ""
+                const name = subscriber.raw_user_meta_data?.full_name || ""
+                return phone.includes(searchTerm) || name.includes(searchTerm) && subscriber.role != "admin"
+            }) || []
+
+            setSearchResults(filtered)
         } catch (error) {
             console.error("Ошибка поиска абонентов:", error)
             setError("Не удалось найти абонентов. Пожалуйста, попробуйте снова.")
@@ -128,7 +136,6 @@ export default function CallsSection() {
             setError(null)
             try {
                 if (isEditing && selectedCall) {
-                    // Обновление звонка
                     const { data, error } = await supabase
                         .from("calls")
                         .update(newCall)
@@ -137,7 +144,6 @@ export default function CallsSection() {
                     console.log("Звонок успешно обновлен:", data)
                     alert("Звонок успешно обновлен!")
                 } else {
-                    // Создание звонка
                     const { data, error } = await supabase.from("calls").insert(newCall)
                     if (error) throw error
                     console.log("Звонок успешно создан:", data)
@@ -184,7 +190,7 @@ export default function CallsSection() {
                 Создать звонок
             </button>
 
-            {loading && <p className="text-center text-gray-600">Загрузка звонков...</p>}
+            {loading && <p className="text-center text-gray-600">Загрузка...</p>}
             {error && <p className="text-center text-red-500">{error}</p>}
 
             <div className="overflow-x-auto">
@@ -262,7 +268,7 @@ export default function CallsSection() {
                                         id="searchSubscriber"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Введите ID, имя, номер телефона или адрес"
+                                        placeholder="Введите имя или номер телефона (+375...)"
                                         className="border rounded-l p-2 flex-grow"
                                     />
                                     <button
@@ -283,7 +289,7 @@ export default function CallsSection() {
                                                         ...prev,
                                                         subscriber_id: result.subscriber_id,
                                                     }))
-                                                    setSearchResults([]) // Очистить результаты поиска
+                                                    setSearchResults([])
                                                 }}
                                                 className="cursor-pointer hover:bg-gray-100 p-2 transition-colors"
                                             >
@@ -301,18 +307,6 @@ export default function CallsSection() {
                                     </ul>
                                 )}
                             </div>
-
-                            {/* Поле для отображения выбранного абонента */}
-                            {newCall.subscriber_id && (
-                                <div className="mt-4 p-2 border rounded bg-gray-50">
-                                    <p className="text-sm text-gray-700">
-                                        Выбранный абонент:{" "}
-                                        <span className="font-semibold">
-                                            {newCall.subscriber_id}
-                                        </span>
-                                    </p>
-                                </div>
-                            )}
 
                             {/* Выбор кода зоны из тарифов */}
                             <div>
@@ -374,7 +368,7 @@ export default function CallsSection() {
                                         const value = parseInt(e.target.value);
                                         setNewCall({...newCall, duration: value >= 0 ? value : 0});
                                     }}
-                                    min="0" // Добавляем атрибут min для HTML-валидации
+                                    min="0"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     required
                                 />

@@ -45,6 +45,7 @@ export default function ProfilesSection() {
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
+                .eq("role", "user");
             if (error) throw error
             setProfiles(data || [])
         } catch (error) {

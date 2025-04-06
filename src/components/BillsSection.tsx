@@ -66,13 +66,21 @@ export default function BillsSection() {
         setLoading(true)
         setError(null)
         try {
+            // Сначала получаем всех абонентов
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
-                .ilike("subscriber_id_substring", `%${searchTerm}%`)
 
             if (error) throw error
-            setSearchResults(data || [])
+
+            // Фильтруем на клиенте
+            const filtered = data?.filter(subscriber => {
+                const phone = subscriber.raw_user_meta_data?.phone_number || ""
+                const name = subscriber.raw_user_meta_data?.full_name || ""
+                return phone.includes(searchTerm) || name.includes(searchTerm) && subscriber.role != "admin"
+            }) || []
+
+            setSearchResults(filtered)
         } catch (error) {
             console.error("Ошибка поиска абонентов:", error)
             setError("Не удалось найти абонентов. Пожалуйста, попробуйте снова.")
@@ -188,8 +196,6 @@ export default function BillsSection() {
                     .from("tariffs")
                     .select("*")
                     .eq("zone_code", call.zone_code)
-                    .lte("start_date", call.call_date)
-                    .gte("end_date", call.call_date)
                     .single()
 
                 if (error) throw error
@@ -246,8 +252,9 @@ export default function BillsSection() {
                         })),
                     },
                 }
-
+                console.log(billData)
                 if (isEditing && selectedBill) {
+
                     // Обновление счета
                     const { data, error } = await supabase.from("bills").update(billData).eq("id", selectedBill.id)
                     if (error) throw error
@@ -372,7 +379,7 @@ export default function BillsSection() {
                                         id="searchSubscriber"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Введите ID, имя, номер телефона или адрес"
+                                        placeholder="имя или номер телефона"
                                         className="border rounded-l p-2 flex-grow"
                                     />
                                     <button
