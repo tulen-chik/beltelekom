@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { Plus, Trash, Edit, X } from "lucide-react"
+import { Plus, Trash, Edit, X, RefreshCw } from "lucide-react"
 
 interface Subscriber {
     subscriber_id: string
     money: number
+    deleted: boolean
     category: string
     role: string
     subscriber_id_substring: string
@@ -41,7 +42,9 @@ export default function ProfilesSection() {
         setLoading(true)
         setError(null)
         try {
-            const { data, error } = await supabase.from("subscribers_profiles").select("*")
+            const { data, error } = await supabase
+                .from("subscribers_profiles")
+                .select("*")
             if (error) throw error
             setProfiles(data || [])
         } catch (error) {
@@ -118,7 +121,9 @@ export default function ProfilesSection() {
                     alert("Профиль успешно обновлен!")
                 } else {
                     // Создание профиля
-                    const { data, error } = await supabase.from("subscribers_profiles").insert(newProfile)
+                    const { data, error } = await supabase
+                        .from("subscribers_profiles")
+                        .insert({ ...newProfile, deleted: false })
                     if (error) throw error
                     console.log("Профиль успешно создан:", data)
                     alert("Профиль успешно создан!")
@@ -136,18 +141,41 @@ export default function ProfilesSection() {
         }
     }
 
-    // Удаление профиля
+    // Мягкое удаление профиля
     const handleDeleteProfile = async (subscriberId: string) => {
         setLoading(true)
         setError(null)
         try {
-            const { error } = await supabase.from("subscribers_profiles").delete().eq("subscriber_id", subscriberId)
+            const { error } = await supabase
+                .from("subscribers_profiles")
+                .update({ deleted: true })
+                .eq("subscriber_id", subscriberId)
             if (error) throw error
-            alert("Профиль успешно удален!")
+            alert("Профиль успешно помечен как удаленный!")
             fetchProfiles()
         } catch (error) {
-            console.error("Ошибка удаления профиля:", error)
-            setError("Не удалось удалить профиль. Пожалуйста, попробуйте снова.")
+            console.error("Ошибка при пометке профиля как удаленного:", error)
+            setError("Не удалось пометить профиль как удаленный. Пожалуйста, попробуйте снова.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Восстановление профиля
+    const handleRestoreProfile = async (subscriberId: string) => {
+        setLoading(true)
+        setError(null)
+        try {
+            const { error } = await supabase
+                .from("subscribers_profiles")
+                .update({ deleted: false })
+                .eq("subscriber_id", subscriberId)
+            if (error) throw error
+            alert("Профиль успешно восстановлен!")
+            fetchProfiles()
+        } catch (error) {
+            console.error("Ошибка при восстановлении профиля:", error)
+            setError("Не удалось восстановить профиль. Пожалуйста, попробуйте снова.")
         } finally {
             setLoading(false)
         }
@@ -174,15 +202,23 @@ export default function ProfilesSection() {
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Имя</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Телефон</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Адрес</th>
+                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Статус</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Действия</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                     {profiles.map((profile) => (
-                        <tr key={profile.subscriber_id} className="hover:bg-gray-50">
+                        <tr key={profile.subscriber_id} className={`hover:bg-gray-50 ${profile.deleted ? 'bg-gray-100' : ''}`}>
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.full_name}</td>
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.phone_number}</td>
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.address}</td>
+                            <td className="py-2 px-4 text-sm text-gray-800">
+                                {profile.deleted ? (
+                                    <span className="text-red-500">Удален</span>
+                                ) : (
+                                    <span className="text-green-500">Активен</span>
+                                )}
+                            </td>
                             <td className="py-2 px-4 text-sm text-gray-800 flex space-x-2">
                                 <button
                                     onClick={() => openModal(profile)}
@@ -190,12 +226,21 @@ export default function ProfilesSection() {
                                 >
                                     <Edit className="h-5 w-5" />
                                 </button>
-                                <button
-                                    onClick={() => handleDeleteProfile(profile.subscriber_id)}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <Trash className="h-5 w-5" />
-                                </button>
+                                {profile.deleted ? (
+                                    <button
+                                        onClick={() => handleRestoreProfile(profile.subscriber_id)}
+                                        className="text-green-500 hover:text-green-700"
+                                    >
+                                        <RefreshCw className="h-5 w-5" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleDeleteProfile(profile.subscriber_id)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <Trash className="h-5 w-5" />
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
