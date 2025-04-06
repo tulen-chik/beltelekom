@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import {CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone} from 'lucide-react'
+import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone, Wallet } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
-import {Subscriber} from "@/types";
+import { supabase } from '@/lib/supabase'
+import { Subscriber } from "@/types"
 
 interface Bill {
     id: string
@@ -31,7 +32,7 @@ interface Bill {
 
 interface UserBillsComponentProps {
     initialBills: Bill[]
-    userId: Subscriber | null
+    userId: Subscriber // Изменено с Subscriber | null на string (subscriber_id)
 }
 
 const formatDuration = (seconds: number): string => {
@@ -47,15 +48,36 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [userData, setUserData] = useState<Subscriber | null>(null)
+    const [balance, setBalance] = useState<number | null>(null)
     const router = useRouter()
 
     useEffect(() => {
         setBills(initialBills)
+        fetchUserData()
+    }, [initialBills, userId])
 
+    const fetchUserData = async () => {
+        setLoading(true)
+        try {
+            // Получаем данные пользователя из таблицы subscribers_profiles
+            const { data, error } = await supabase
+                .from('subscribers_profiles')
+                .select('*')
+                .eq('subscriber_id', userId.subscriber_id)
+                .single()
 
-    }, [initialBills])
+            if (error) throw error
 
-    console.log(userId)
+            setUserData(data)
+            setBalance(data.money)
+        } catch (error) {
+            console.error('Ошибка загрузки данных пользователя:', error)
+            setError('Не удалось загрузить данные пользователя')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleBillSelect = (bill: Bill) => {
         setSelectedBill(bill)
@@ -73,7 +95,6 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         router.push('/')
     }
 
-    // @ts-ignore
     return (
         <div className="container mx-auto p-4 max-w-4xl">
             <div className="bg-white shadow-md rounded-lg p-6 mb-8">
@@ -82,20 +103,30 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">Ваши счета</h1>
                         <p className="text-gray-600">Управляйте своими счетами</p>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex items-center"
-                    >
-                        <LogOut className="mr-2 h-5 w-5"/>
-                        Выйти
-                    </button>
+                    <div className="flex items-center space-x-4">
+                        {balance !== null && (
+                            <div className="bg-blue-50 p-3 rounded-lg flex items-center">
+                                <Wallet className="h-5 w-5 text-blue-600 mr-2" />
+                                <span className="font-semibold text-blue-600">
+                                    Баланс: ${balance.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                        <button
+                            onClick={handleLogout}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex items-center"
+                        >
+                            <LogOut className="mr-2 h-5 w-5"/>
+                            Выйти
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div className="bg-white shadow-md rounded-lg p-6">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">История счетов</h2>
                 {loading ? (
-                    <p className="text-center text-gray-600">Загрузка счетов...</p>
+                    <p className="text-center text-gray-600">Загрузка данных...</p>
                 ) : error ? (
                     <p className="text-center text-red-500">{error}</p>
                 ) : bills.length === 0 ? (
@@ -177,27 +208,34 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                     <p className="text-sm font-medium text-gray-600">Имя подписчика</p>
                                     <p className="text-lg font-semibold text-gray-800">
                                         <PersonStanding className="inline-block mr-1 h-5 w-5"/>
-                                        {userId?.raw_user_meta_data?.full_name}
+                                        {userData?.raw_user_meta_data?.full_name || 'Не указано'}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <p className="text-sm font-medium text-gray-600">Адрес подписчика</p>
                                     <p className="text-lg font-semibold text-gray-800">
                                         <Home className="inline-block mr-1 h-5 w-5"/>
-                                        {userId?.raw_user_meta_data?.address}
+                                        {userData?.raw_user_meta_data?.address || 'Не указано'}
                                     </p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <p className="text-sm font-medium text-gray-600">Номер телефона</p>
                                     <p className="text-lg font-semibold text-gray-800">
                                         <Phone className="inline-block mr-1 h-5 w-5"/>
-                                        {userId?.raw_user_meta_data?.phone_number}
+                                        {userData?.raw_user_meta_data?.phone_number || 'Не указано'}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-600">Текущий баланс</p>
+                                    <p className="text-lg font-semibold text-gray-800">
+                                        <Wallet className="inline-block mr-1 h-5 w-5"/>
+                                        ${balance?.toFixed(2) || '0.00'}
                                     </p>
                                 </div>
                             </div>
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
                             {Object.entries(selectedBill.details.calls.reduce<Record<string, any[]>>((acc, call) => {
-                                const tariffName = call.zone_code; // Используйте zone_code как имя тарифа
+                                const tariffName = call.zone_code;
                                 if (!acc[tariffName]) {
                                     acc[tariffName] = [];
                                 }
@@ -235,4 +273,3 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         </div>
     )
 }
-
