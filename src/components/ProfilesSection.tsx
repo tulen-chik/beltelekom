@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { Plus, Trash, Edit, X, RefreshCw } from "lucide-react"
+import { Plus, Trash, Edit, X, RefreshCw, Wallet } from "lucide-react"
 
 interface Subscriber {
     subscriber_id: string
@@ -45,7 +45,8 @@ export default function ProfilesSection() {
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
-                .eq("role", "user");
+                .eq("role", "user")
+                .order("money", { ascending: false });
             if (error) throw error
             setProfiles(data || [])
         } catch (error) {
@@ -64,7 +65,10 @@ export default function ProfilesSection() {
     const openModal = (profile: Subscriber | null = null) => {
         if (profile) {
             setSelectedProfile(profile)
-            setNewProfile(profile)
+            setNewProfile({
+                ...profile,
+                money: profile.money || 0
+            })
             setIsEditing(true)
         } else {
             setNewProfile({
@@ -115,7 +119,10 @@ export default function ProfilesSection() {
                     // Обновление профиля
                     const { data, error } = await supabase
                         .from("subscribers_profiles")
-                        .update(newProfile)
+                        .update({
+                            ...newProfile,
+                            money: Number(newProfile.money) // Убедимся, что money - число
+                        })
                         .eq("subscriber_id", selectedProfile.subscriber_id)
                     if (error) throw error
                     console.log("Профиль успешно обновлен:", data)
@@ -124,7 +131,11 @@ export default function ProfilesSection() {
                     // Создание профиля
                     const { data, error } = await supabase
                         .from("subscribers_profiles")
-                        .insert({ ...newProfile, deleted: false })
+                        .insert({
+                            ...newProfile,
+                            deleted: false,
+                            money: Number(newProfile.money) // Убедимся, что money - число
+                        })
                     if (error) throw error
                     console.log("Профиль успешно создан:", data)
                     alert("Профиль успешно создан!")
@@ -203,6 +214,7 @@ export default function ProfilesSection() {
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Имя</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Телефон</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Адрес</th>
+                        <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Баланс</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Статус</th>
                         <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Действия</th>
                     </tr>
@@ -213,6 +225,12 @@ export default function ProfilesSection() {
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.full_name}</td>
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.phone_number}</td>
                             <td className="py-2 px-4 text-sm text-gray-800">{profile.raw_user_meta_data.address}</td>
+                            <td className={`py-2 px-4 text-sm ${profile.money >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                <div className="flex items-center">
+                                    <Wallet className="h-4 w-4 mr-1" />
+                                    {profile.money.toFixed(2)}
+                                </div>
+                            </td>
                             <td className="py-2 px-4 text-sm text-gray-800">
                                 {profile.deleted ? (
                                     <span className="text-red-500">Удален</span>
@@ -351,6 +369,30 @@ export default function ProfilesSection() {
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     required
                                 />
+                            </div>
+                            <div>
+                                <label htmlFor="money" className="block text-sm font-medium text-gray-700">
+                                    Баланс
+                                </label>
+                                <div className="relative mt-1 rounded-md shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Wallet className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        id="money"
+                                        value={newProfile.money || 0}
+                                        onChange={(e) =>
+                                            setNewProfile({
+                                                ...newProfile,
+                                                money: parseFloat(e.target.value) || 0,
+                                            })
+                                        }
+                                        step="0.01"
+                                        className="block w-full pl-10 border border-gray-300 rounded-md p-2"
+                                        required
+                                    />
+                                </div>
                             </div>
                             <div className="flex justify-end space-x-2">
                                 <button
