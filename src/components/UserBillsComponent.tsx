@@ -4,11 +4,14 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone, Wallet } from 'lucide-react'
+import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone, Wallet, Download } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import { supabase } from '@/lib/supabase'
 import { Subscriber } from "@/types"
+import { jsPDF } from "jspdf"
+// @ts-ignore
+import autoTable from 'jspdf-autotable'
 
 interface Bill {
     id: string
@@ -32,7 +35,7 @@ interface Bill {
 
 interface UserBillsComponentProps {
     initialBills: Bill[]
-    userId: Subscriber // Изменено с Subscriber | null на string (subscriber_id)
+    userId: Subscriber
 }
 
 const formatDuration = (seconds: number): string => {
@@ -57,10 +60,11 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         fetchUserData()
     }, [initialBills, userId])
 
+
+
     const fetchUserData = async () => {
         setLoading(true)
         try {
-            // Получаем данные пользователя из таблицы subscribers_profiles
             const { data, error } = await supabase
                 .from('subscribers_profiles')
                 .select('*')
@@ -93,6 +97,80 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         Cookies.remove('userRole')
         Cookies.remove('userProfile')
         router.push('/')
+    }
+
+    const downloadBillAsPdf = () => {
+        if (!selectedBill || !userData) return
+
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm'
+        })
+
+        // Добавляем кириллический шрифт
+        try {
+            // Замените '/fonts/NotoSans-Regular.ttf' на актуальный путь к вашему шрифту
+            doc.addFont('/NotoSans-Regular.ttf', 'NotoSans', 'normal')
+            doc.setFont('NotoSans')
+        } catch (error) {
+            console.error('Ошибка загрузки шрифта:', error)
+            doc.setFont('helvetica') // fallback
+        }
+
+        // Заголовок
+        doc.setFontSize(18)
+        doc.text('Детали счета', 105, 20, { align: 'center' })
+
+        // Информация о подписчике
+        doc.setFontSize(12)
+        doc.text(`Имя: ${userData.raw_user_meta_data?.full_name || 'Не указано'}`, 14, 40)
+        doc.text(`Адрес: ${userData.raw_user_meta_data?.address || 'Не указано'}`, 14, 50)
+        doc.text(`Телефон: ${userData.raw_user_meta_data?.phone_number || 'Не указано'}`, 14, 60)
+
+        // Информация о счете
+        doc.text(`Период: ${format(new Date(selectedBill.start_date), 'dd/MM/yyyy')} - ${format(new Date(selectedBill.end_date), 'dd/MM/yyyy')}`, 14, 75)
+        doc.text(`Сумма: $${selectedBill.amount.toFixed(2)}`, 14, 85)
+        doc.text(`Дата создания: ${format(new Date(selectedBill.created_at), 'dd/MM/yyyy HH:mm')}`, 14, 95)
+
+        // Подготовка данных для таблицы
+        const callData = selectedBill.details.calls.map(call => [
+            format(new Date(call.call_date), 'dd/MM/yyyy'),
+            call.start_time,
+            call.zone_code,
+            formatDuration(call.duration)
+        ])
+
+        // Таблица с вызовами
+        autoTable(doc, {
+            startY: 110,
+            head: [['Дата', 'Время', 'Тариф', 'Продолжительность']],
+            body: callData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [41, 128, 185],
+                textColor: 255,
+                font: 'NotoSans',
+                fontStyle: 'normal'
+            },
+            bodyStyles: {
+                font: 'NotoSans',
+                fontStyle: 'normal'
+            },
+            styles: {
+                cellPadding: 3,
+                fontSize: 10,
+                font: 'NotoSans',
+                fontStyle: 'normal'
+            }
+        })
+
+        // Итоговая информация
+        const finalY = (doc as any).lastAutoTable.finalY + 10
+        doc.text(`Общее количество звонков: ${selectedBill.details.calls.length}`, 14, finalY)
+        doc.text(`Текущий баланс: $${balance?.toFixed(2) || '0.00'}`, 14, finalY + 10)
+
+        // Сохранение PDF
+        doc.save(`Счет_${selectedBill.id}_${format(new Date(), 'yyyyMMdd')}.pdf`)
     }
 
     return (
@@ -178,9 +256,18 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                         >
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-semibold text-gray-800">Детали счета</h2>
-                                <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
-                                    <X className="h-6 w-6"/>
-                                </button>
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={downloadBillAsPdf}
+                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+                                        title="Скачать PDF"
+                                    >
+                                        <Download className="h-5 w-5"/>
+                                    </button>
+                                    <button onClick={closeModal} className="p-2 text-gray-500 hover:text-gray-700">
+                                        <X className="h-6 w-6"/>
+                                    </button>
+                                </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <div className="bg-gray-50 p-4 rounded-lg">

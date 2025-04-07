@@ -4,6 +4,7 @@ interface RawMetaData {
     address: string;
     full_name: string;
     phone_number: string;
+    email: string;
 }
 
 export interface Subscriber {

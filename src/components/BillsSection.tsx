@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { Plus, Trash, Edit, X, Search } from "lucide-react"
-import type { Call, Subscriber, Rate } from "../types/index"
+import type { Call, Subscriber } from "../types/index"
 import DateRangePicker from "./DateRangePicker"
 import CallsList from "./CallsList"
+import { sendBillEmail } from '@/app/actions/sendBillEmail'
 
 interface Bill {
     id: string
@@ -66,18 +67,16 @@ export default function BillsSection() {
         setLoading(true)
         setError(null)
         try {
-            // Сначала получаем всех абонентов
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
 
             if (error) throw error
 
-            // Фильтруем на клиенте
             const filtered = data?.filter(subscriber => {
                 const phone = subscriber.raw_user_meta_data?.phone_number || ""
                 const name = subscriber.raw_user_meta_data?.full_name || ""
-                return phone.includes(searchTerm) || name.includes(searchTerm) && subscriber.role != "admin"
+                return (phone.includes(searchTerm) || name.includes(searchTerm)) && subscriber.role != "admin"
             }) || []
 
             setSearchResults(filtered)
@@ -257,13 +256,18 @@ export default function BillsSection() {
                     },
                 }
 
+                let savedBill: Bill
+
                 if (isEditing && selectedBill) {
                     const { data, error } = await supabase
                         .from("bills")
                         .update(billData)
                         .eq("id", selectedBill.id)
+                        .select()
+                        .single()
 
                     if (error) throw error
+                    savedBill = data
 
                     if (newBill.paid && (!selectedBill.paid || selectedBill.paid !== newBill.paid)) {
                         await supabase.rpc('decrement_balance', {
@@ -277,8 +281,11 @@ export default function BillsSection() {
                     const { data, error } = await supabase
                         .from("bills")
                         .insert(billData)
+                        .select()
+                        .single()
 
                     if (error) throw error
+                    savedBill = data
 
                     if (newBill.paid) {
                         await supabase.rpc('decrement_balance', {
@@ -288,6 +295,34 @@ export default function BillsSection() {
                     }
 
                     alert("Счет успешно создан!")
+                }
+
+                // Отправка email на адрес текущего пользователя
+                if (selectedSubscriber?.raw_user_meta_data?.email) {
+
+                    try {
+                        // console.log(selectedSubscriber.raw_user_meta_data.email)
+                        const result = await sendBillEmail({
+                            email: selectedSubscriber.raw_user_meta_data.email,
+                            billData: {
+                                id: savedBill.id,
+                                amount: savedBill.amount,
+                                start_date: savedBill.start_date,
+                                end_date: savedBill.end_date,
+                                created_at: savedBill.created_at,
+                                callsCount: selectedCalls.length,
+                                subscriberName: selectedSubscriber?.raw_user_meta_data?.full_name || 'Клиент'
+                            }
+                        })
+
+                        if (result.success) {
+                            alert("Счет отправлен на ваш email!")
+                        } else {
+                            console.warn("Счет сохранен, но не отправлен:", result.message)
+                        }
+                    } catch (emailError) {
+                        console.error("Ошибка при отправке email:", emailError)
+                    }
                 }
 
                 closeModal()
@@ -533,35 +568,35 @@ export default function BillsSection() {
                             )}
 
                             {/* Детали счета */}
-                                <div className="border rounded p-4 space-y-2">
-                                    <h3 className="font-medium">Детали счета</h3>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="block text-sm text-gray-600">Дата начала:</label>
-                                            <p>{newBill.start_date}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-gray-600">Дата окончания:</label>
-                                            <p>{newBill.end_date}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-gray-600">Сумма:</label>
-                                            <p>{newBill.amount?.toFixed(2)}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-gray-600">Статус оплаты:</label>
-                                            <label className="inline-flex items-center mt-1">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={newBill.paid || false}
-                                                    onChange={(e) => setNewBill({...newBill, paid: e.target.checked})}
-                                                    className="rounded"
-                                                />
-                                                <span className="ml-2">Оплачен</span>
-                                            </label>
-                                        </div>
+                            <div className="border rounded p-4 space-y-2">
+                                <h3 className="font-medium">Детали счета</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block text-sm text-gray-600">Дата начала:</label>
+                                        <p>{newBill.start_date}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-600">Дата окончания:</label>
+                                        <p>{newBill.end_date}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-600">Сумма:</label>
+                                        <p>{newBill.amount?.toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-600">Статус оплаты:</label>
+                                        <label className="inline-flex items-center mt-1">
+                                            <input
+                                                type="checkbox"
+                                                checked={newBill.paid || false}
+                                                onChange={(e) => setNewBill({...newBill, paid: e.target.checked})}
+                                                className="rounded"
+                                            />
+                                            <span className="ml-2">Оплачен</span>
+                                        </label>
                                     </div>
                                 </div>
+                            </div>
 
                             {/* Кнопки управления */}
                             <div className="flex justify-end space-x-2 pt-4">
