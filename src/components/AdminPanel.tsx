@@ -1,18 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { LogOut, Phone, Tag, Users, Clipboard } from "lucide-react"
+import { LogOut, Phone, Tag, Users, Clipboard, Gift } from "lucide-react"
 import TariffsSection from "./TariffsSection"
 import ProfilesSection from "./ProfilesSection"
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import BillsSection from "@/components/BillsSection";
 import CallsSection from "@/components/CallsSection";
+import BonusesSection from "@/components/BonusesSection";
 
 export default function AdminPanel() {
     const router = useRouter() // Инициализируем router
 
-    const [activeSection, setActiveSection] = useState<"calls" | "tariffs" | "profiles" | "bills">("calls")
+    const [activeSection, setActiveSection] = useState<"calls" | "tariffs" | "profiles" | "bills" | "bonuses">("calls")
 
     // Выход из системы
     const handleLogout = () => {
@@ -62,7 +63,16 @@ export default function AdminPanel() {
                                     className={`flex items-center w-full p-2 rounded ${activeSection === "bills" ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}
                                 >
                                     <Clipboard className="mr-2"/>
-                                    счета
+                                    Счета
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    onClick={() => setActiveSection("bonuses")}
+                                    className={`flex items-center w-full p-2 rounded ${activeSection === "bonuses" ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}
+                                >
+                                    <Gift className="mr-2"/>
+                                    Бонусы
                                 </button>
                             </li>
                         </ul>
@@ -79,12 +89,10 @@ export default function AdminPanel() {
             {/* Основное содержимое */}
             <div className="flex-1 overflow-y-auto p-8">
                 {activeSection === "calls" && <CallsSection/>}
-
                 {activeSection === "tariffs" && <TariffsSection />}
-
                 {activeSection === "profiles" && <ProfilesSection />}
-
                 {activeSection === "bills" && <BillsSection />}
+                {activeSection === "bonuses" && <BonusesSection />}
             </div>
         </div>
     )

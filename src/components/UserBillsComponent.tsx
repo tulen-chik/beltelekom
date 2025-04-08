@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone, Wallet, Download } from 'lucide-react'
+import { CalendarDays, Clock, DollarSign, X, LogOut, PersonStanding, Home, Phone, Wallet, Download, Gift } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import { supabase } from '@/lib/supabase'
@@ -13,24 +13,41 @@ import { jsPDF } from "jspdf"
 // @ts-ignore
 import autoTable from 'jspdf-autotable'
 
+interface CallDetail {
+    id: number
+    duration: number
+    call_date: string
+    zone_code: string
+    start_time: string
+}
+
+interface BillDetails {
+    calls: CallDetail[]
+}
+
+interface Bonus {
+    id: string
+    bill_id: string
+    subscriber_id: string
+    amount: number
+    reason: string
+    applied: boolean
+    applied_at: string | null
+    created_at: string
+    created_by?: string | null
+}
+
 interface Bill {
     id: string
     subscriber_id: string
     start_date: string
     end_date: string
     amount: number
-    details: {
-        calls: {
-            id: number
-            duration: number
-            call_date: string
-            zone_code: string
-            start_time: string
-        }[]
-    }
+    details: BillDetails
     created_at: string
-    subscriberName: string
-    subscriberAddress: string
+    subscriberName?: string
+    subscriberAddress?: string
+    bonuses?: Bonus[]
 }
 
 interface UserBillsComponentProps {
@@ -44,7 +61,6 @@ const formatDuration = (seconds: number): string => {
     const remainingSeconds = seconds % 60
     return `${hours}ч ${minutes}м ${remainingSeconds}с`
 }
-
 export default function UserBillsComponent({ initialBills, userId }: UserBillsComponentProps) {
     const [bills, setBills] = useState<Bill[]>(initialBills)
     const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
@@ -56,11 +72,36 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
     const router = useRouter()
 
     useEffect(() => {
-        setBills(initialBills)
-        fetchUserData()
+        const fetchBillsWithBonuses = async () => {
+            setLoading(true)
+            try {
+                const billsWithBonuses = await Promise.all(initialBills.map(async (bill) => {
+                    const { data: bonuses, error } = await supabase
+                        .from('bonuses')
+                        .select('*')
+                        .eq('bill_id', bill.id)
+
+                    if (error) throw error
+
+                    return {
+                        ...bill,
+                        bonuses: bonuses || []
+                    }
+                }));
+
+                setBills(billsWithBonuses)
+                fetchUserData()
+            } catch (error) {
+                console.error('Error fetching bonuses:', error)
+                setError('Failed to load bonus data')
+                setBills(initialBills)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchBillsWithBonuses()
     }, [initialBills, userId])
-
-
 
     const fetchUserData = async () => {
         setLoading(true)
@@ -83,9 +124,26 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         }
     }
 
-    const handleBillSelect = (bill: Bill) => {
-        setSelectedBill(bill)
-        setIsModalOpen(true)
+    const handleBillSelect = async (bill: Bill) => {
+        // Fetch fresh bonus data when bill is selected
+        try {
+            const { data: bonuses, error } = await supabase
+                .from('bonuses')
+                .select('*')
+                .eq('bill_id', bill.id)
+
+            if (error) throw error
+
+            setSelectedBill({
+                ...bill,
+                bonuses: bonuses || []
+            })
+            setIsModalOpen(true)
+        } catch (error) {
+            console.error('Error fetching bonuses:', error)
+            setSelectedBill(bill)
+            setIsModalOpen(true)
+        }
     }
 
     const closeModal = () => {
@@ -107,14 +165,12 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             unit: 'mm'
         })
 
-        // Добавляем кириллический шрифт
         try {
-            // Замените '/fonts/NotoSans-Regular.ttf' на актуальный путь к вашему шрифту
             doc.addFont('/NotoSans-Regular.ttf', 'NotoSans', 'normal')
             doc.setFont('NotoSans')
         } catch (error) {
             console.error('Ошибка загрузки шрифта:', error)
-            doc.setFont('helvetica') // fallback
+            doc.setFont('helvetica')
         }
 
         // Заголовок
@@ -130,7 +186,16 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         // Информация о счете
         doc.text(`Период: ${format(new Date(selectedBill.start_date), 'dd/MM/yyyy')} - ${format(new Date(selectedBill.end_date), 'dd/MM/yyyy')}`, 14, 75)
         doc.text(`Сумма: $${selectedBill.amount.toFixed(2)}`, 14, 85)
-        doc.text(`Дата создания: ${format(new Date(selectedBill.created_at), 'dd/MM/yyyy HH:mm')}`, 14, 95)
+
+        // Добавляем информацию о бонусах
+        if (selectedBill.bonuses && selectedBill.bonuses.length > 0) {
+            const totalBonuses = selectedBill.bonuses.reduce((sum, bonus) => sum + bonus.amount, 0)
+            doc.text(`Бонусы: $${totalBonuses.toFixed(2)}`, 14, 95)
+            doc.text(`Итоговая сумма с учетом бонусов: $${(selectedBill.amount - totalBonuses).toFixed(2)}`, 14, 105)
+            doc.text(`Дата создания: ${format(new Date(selectedBill.created_at), 'dd/MM/yyyy HH:mm')}`, 14, 115)
+        } else {
+            doc.text(`Дата создания: ${format(new Date(selectedBill.created_at), 'dd/MM/yyyy HH:mm')}`, 14, 95)
+        }
 
         // Подготовка данных для таблицы
         const callData = selectedBill.details.calls.map(call => [
@@ -142,7 +207,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
 
         // Таблица с вызовами
         autoTable(doc, {
-            startY: 110,
+            startY: selectedBill.bonuses?.length ? 125 : 105,
             head: [['Дата', 'Время', 'Тариф', 'Продолжительность']],
             body: callData,
             theme: 'grid',
@@ -164,6 +229,33 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             }
         })
 
+        // Добавляем таблицу с бонусами, если они есть
+        if (selectedBill.bonuses && selectedBill.bonuses.length > 0) {
+            const bonusData = selectedBill.bonuses.map(bonus => [
+                bonus.reason,
+                `$${bonus.amount.toFixed(2)}`,
+                bonus.applied ? 'Да' : 'Нет',
+                bonus.applied_at ? format(new Date(bonus.applied_at), 'dd/MM/yyyy HH:mm') : 'Не применен'
+            ])
+
+            autoTable(doc, {
+                startY: (doc as any).lastAutoTable.finalY + 10,
+                head: [['Причина', 'Сумма', 'Применен', 'Дата применения']],
+                body: bonusData,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [39, 174, 96],
+                    textColor: 255,
+                    font: 'NotoSans',
+                    fontStyle: 'normal'
+                },
+                bodyStyles: {
+                    font: 'NotoSans',
+                    fontStyle: 'normal'
+                }
+            })
+        }
+
         // Итоговая информация
         const finalY = (doc as any).lastAutoTable.finalY + 10
         doc.text(`Общее количество звонков: ${selectedBill.details.calls.length}`, 14, finalY)
@@ -173,13 +265,18 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         doc.save(`Счет_${selectedBill.id}_${format(new Date(), 'yyyyMMdd')}.pdf`)
     }
 
+    const calculateTotalBonuses = (bonuses: Bonus[] | undefined): number => {
+        if (!bonuses) return 0
+        return bonuses.reduce((total, bonus) => total + bonus.amount, 0)
+    }
+
     return (
         <div className="container mx-auto p-4 max-w-4xl">
             <div className="bg-white shadow-md rounded-lg p-6 mb-8">
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">Ваши счета</h1>
-                        <p className="text-gray-600">Управляйте своими счетами</p>
+                        <p className="text-gray-600">Управляйте своими счетами и бонусами</p>
                     </div>
                     <div className="flex items-center space-x-4">
                         {balance !== null && (
@@ -211,29 +308,44 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                     <p className="text-center text-gray-600">Счета не найдены.</p>
                 ) : (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                        {bills.map((bill) => (
-                            <motion.div
-                                key={bill.id}
-                                className="cursor-pointer p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-gray-50"
-                                onClick={() => handleBillSelect(bill)}
-                                whileHover={{scale: 1.02}}
-                                whileTap={{scale: 0.98}}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="font-semibold text-lg text-gray-800">${bill.amount.toFixed(2)}</p>
+                        {bills.map((bill) => {
+                            const totalBonuses = calculateTotalBonuses(bill.bonuses)
+                            const finalAmount = bill.amount - totalBonuses
+
+                            return (
+                                <motion.div
+                                    key={bill.id}
+                                    className="cursor-pointer p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-gray-50"
+                                    onClick={() => handleBillSelect(bill)}
+                                    whileHover={{scale: 1.02}}
+                                    whileTap={{scale: 0.98}}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="flex items-center">
+                                                <p className="font-semibold text-lg text-gray-800">
+                                                    ${finalAmount.toFixed(2)}
+                                                </p>
+                                                {totalBonuses > 0 && (
+                                                    <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                                                        <Gift className="h-3 w-3 mr-1"/>
+                                                        -${totalBonuses.toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-600">
+                                                <CalendarDays className="inline-block mr-1 h-4 w-4"/>
+                                                {format(new Date(bill.start_date), 'dd/MM/yyyy')} - {format(new Date(bill.end_date), 'dd/MM/yyyy')}
+                                            </p>
+                                        </div>
                                         <p className="text-sm text-gray-600">
-                                            <CalendarDays className="inline-block mr-1 h-4 w-4"/>
-                                            {format(new Date(bill.start_date), 'dd/MM/yyyy')} - {format(new Date(bill.end_date), 'dd/MM/yyyy')}
+                                            <Clock className="inline-block mr-1 h-4 w-4"/>
+                                            {format(new Date(bill.created_at), 'dd/MM/yyyy HH:mm')}
                                         </p>
                                     </div>
-                                    <p className="text-sm text-gray-600">
-                                        <Clock className="inline-block mr-1 h-4 w-4"/>
-                                        {format(new Date(bill.created_at), 'dd/MM/yyyy HH:mm')}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            )
+                        })}
                     </div>
                 )}
             </div>
@@ -284,6 +396,24 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                         ${selectedBill.amount.toFixed(2)}
                                     </p>
                                 </div>
+                                {selectedBill.bonuses && selectedBill.bonuses.length > 0 && (
+                                    <>
+                                        <div className="bg-green-50 p-4 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-600">Бонусы</p>
+                                            <p className="text-lg font-semibold text-green-800">
+                                                <Gift className="inline-block mr-1 h-5 w-5"/>
+                                                -${calculateTotalBonuses(selectedBill.bonuses).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <div className="bg-blue-50 p-4 rounded-lg">
+                                            <p className="text-sm font-medium text-gray-600">Итоговая сумма</p>
+                                            <p className="text-lg font-semibold text-blue-800">
+                                                <DollarSign className="inline-block mr-1 h-5 w-5"/>
+                                                ${(selectedBill.amount - calculateTotalBonuses(selectedBill.bonuses)).toFixed(2)}
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <p className="text-sm font-medium text-gray-600">Создан</p>
                                     <p className="text-lg font-semibold text-gray-800">
@@ -320,6 +450,44 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                                     </p>
                                 </div>
                             </div>
+
+                            {/* Блок с бонусами */}
+                            {selectedBill.bonuses && selectedBill.bonuses.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="text-xl font-semibold mb-4 text-gray-800">Бонусы по счету</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full bg-white">
+                                            <thead className="bg-green-100">
+                                            <tr>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Причина</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Сумма</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Применен</th>
+                                                <th className="py-2 px-4 text-left text-sm font-medium text-gray-600">Дата применения</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                            {selectedBill.bonuses.map((bonus, index) => (
+                                                <tr key={index} className="hover:bg-gray-50">
+                                                    <td className="py-2 px-4 text-sm text-gray-800">{bonus.reason}</td>
+                                                    <td className="py-2 px-4 text-sm text-green-600">-${bonus.amount.toFixed(2)}</td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">
+                                                        {bonus.applied ? (
+                                                            <span className="text-green-600">Да</span>
+                                                        ) : (
+                                                            <span className="text-yellow-600">Нет</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-2 px-4 text-sm text-gray-800">
+                                                        {bonus.applied_at ? format(new Date(bonus.applied_at), 'dd/MM/yyyy HH:mm') : 'Не применен'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Детали звонков</h3>
                             {Object.entries(selectedBill.details.calls.reduce<Record<string, any[]>>((acc, call) => {
                                 const tariffName = call.zone_code;
