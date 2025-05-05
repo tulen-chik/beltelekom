@@ -301,7 +301,7 @@ export default function BillsSection() {
                 if (selectedSubscriber?.raw_user_meta_data?.email) {
 
                     try {
-                        // console.log(selectedSubscriber.raw_user_meta_data.email)
+                        console.log(selectedSubscriber.raw_user_meta_data.email)
                         const result = await sendBillEmail({
                             email: selectedSubscriber.raw_user_meta_data.email,
                             billData: {
