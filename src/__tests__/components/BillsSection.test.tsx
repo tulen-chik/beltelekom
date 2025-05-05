@@ -117,25 +117,32 @@ describe('BillsSection', () => {
     expect(supabase.from('bills').delete).toHaveBeenCalled();
   });
 
-  it('выбирает абонента и показывает его звонки', async () => {
-    // 1. Мокируем данные
-    (supabase.from as jest.Mock).mockImplementation((table) => {
-      if (table === 'subscribers_profiles') return {
-        select: () => ({ data: [{ subscriber_id: '1', raw_user_meta_data: { full_name: 'Тест' } }] })
-      }
-      if (table === 'calls') return {
-        select: () => ({ data: [{ id: 'call1' }] })
-      }
-      return { select: () => ({}) }
+  it('отображает список счетов без ошибок', async () => {
+    // 1. Мокируем данные счетов с обязательными полями
+    (supabase.from('bills').select as jest.Mock).mockResolvedValue({
+      data: [
+        {
+          id: '1',
+          subscriber_id: 'sub1',
+          paid: false,
+          start_date: '2023-01-01',
+          end_date: '2023-01-31',
+          amount: 100, // Обязательное поле
+          details: {}, // Обязательное поле
+          created_at: '2023-01-01T00:00:00' // Обязательное поле
+        }
+      ],
+      error: null
     });
 
-    // 2. Рендерим и взаимодействуем
-    render(<BillsSection />);
-    fireEvent.click(screen.getByText('Создать счет'));
-    fireEvent.click(await screen.findByText('Тест'));
+    // 2. Рендерим компонент
+    await act(async () => {
+      render(<BillsSection />);
+    });
 
-    // 3. Проверяем результат
-    expect(await screen.findByText('call1')).toBeInTheDocument();
+    // 3. Проверяем отображение
+    expect(await screen.findByText('sub1')).toBeInTheDocument();
+    expect(screen.getByText('100.00')).toBeInTheDocument();
   });
 
   it('позволяет сгенерировать счет из выбранных звонков', async () => {
