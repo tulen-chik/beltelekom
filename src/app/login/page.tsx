@@ -6,7 +6,18 @@ import Header from "@/components/header"
 import { supabase } from "@/lib/supabase"
 import Cookies from "js-cookie"
 
+/**
+ * Authentication Page Component
+ * Handles both user login and registration functionality
+ * Features:
+ * - Toggle between login and registration forms
+ * - Form validation and error handling
+ * - Integration with Supabase authentication
+ * - Cookie-based session management
+ * - Role-based redirection (admin/user)
+ */
 export default function AuthPage() {
+    // State management for form fields and UI
     const [isLogin, setIsLogin] = useState(true)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -19,6 +30,10 @@ export default function AuthPage() {
     const [error, setError] = useState("")
     const router = useRouter()
 
+    /**
+     * Handles form submission for both login and registration
+     * @param e - Form event
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
@@ -26,7 +41,7 @@ export default function AuthPage() {
 
         try {
             if (isLogin) {
-                // Логин пользователя
+                // User login flow
                 const { data, error: authError } = await supabase.auth.signInWithPassword({
                     email,
                     password,
@@ -34,7 +49,7 @@ export default function AuthPage() {
 
                 if (authError) throw authError
 
-                // Получаем профиль пользователя
+                // Fetch user profile
                 const { data: profile, error: profileError } = await supabase
                     .from("subscribers_profiles")
                     .select("*")
@@ -44,14 +59,14 @@ export default function AuthPage() {
                 if (profileError) throw profileError
                 if (profile.deleted) throw new Error("Этот аккаунт был удален")
 
-                // Сохраняем данные в куки
+                // Store session data in cookies
                 Cookies.set("userRole", profile.role, { expires: 7 })
                 Cookies.set("userProfile", JSON.stringify(profile), { expires: 7 })
 
-                // Редирект
+                // Redirect based on user role
                 router.push(profile.role === "admin" ? "/admin" : "/user")
             } else {
-                // Регистрация нового пользователя
+                // New user registration flow
                 if (password !== confirmPassword) {
                     throw new Error("Пароли не совпадают")
                 }
@@ -75,12 +90,12 @@ export default function AuthPage() {
                 if (authError) throw authError
                 if (!authData.user) throw new Error("Не удалось создать пользователя")
 
-                // Обработка подтверждения email
+                // Handle email confirmation
                 if (authData.user.identities && authData.user.identities.length > 0) {
                     setError("Регистрация успешна! Проверьте вашу почту для подтверждения.")
                     setIsLogin(true)
                 } else {
-                    // Если подтверждение не требуется, ждем создания профиля
+                    // If no confirmation required, wait for profile creation
                     const profile = await waitForProfileCreation(authData.user.id)
 
                     Cookies.set("userRole", profile.role, { expires: 7 })
@@ -96,6 +111,12 @@ export default function AuthPage() {
         }
     }
 
+    /**
+     * Waits for user profile creation after registration
+     * @param userId - User ID to check
+     * @param attempts - Number of attempts made
+     * @returns User profile data
+     */
     const waitForProfileCreation = async (userId: string, attempts = 0): Promise<any> => {
         if (attempts > 5) throw new Error("Профиль не был создан. Попробуйте войти позже.")
 
@@ -113,6 +134,11 @@ export default function AuthPage() {
         return profile
     }
 
+    /**
+     * Formats error messages for user display
+     * @param error - Error object
+     * @returns Formatted error message
+     */
     const getErrorMessage = (error: any) => {
         if (!error.message) return "Произошла неизвестная ошибка"
 
@@ -128,12 +154,14 @@ export default function AuthPage() {
         return error.message
     }
 
+    // Render the authentication form
     return (
         <div className="min-h-screen bg-white flex flex-col">
             <Header />
 
             <main className="flex-grow flex items-center justify-center px-4">
                 <div className="w-full max-w-md space-y-8">
+                    {/* Form header */}
                     <div className="text-center">
                         <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
                             {isLogin ? "Вход в систему" : "Регистрация"}
@@ -143,8 +171,10 @@ export default function AuthPage() {
                         </p>
                     </div>
 
+                    {/* Authentication form */}
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="space-y-4">
+                            {/* Email input */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                     Электронная почта
@@ -160,6 +190,7 @@ export default function AuthPage() {
                                 />
                             </div>
 
+                            {/* Password input */}
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                                     Пароль
@@ -175,8 +206,10 @@ export default function AuthPage() {
                                 />
                             </div>
 
+                            {/* Registration form fields */}
                             {!isLogin && (
                                 <>
+                                    {/* Confirm password input */}
                                     <div>
                                         <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                                             Подтвердите пароль
@@ -191,6 +224,7 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                     </div>
+                                    {/* Full name input */}
                                     <div>
                                         <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
                                             Полное имя
@@ -205,6 +239,7 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                     </div>
+                                    {/* Phone number input */}
                                     <div>
                                         <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
                                             Номер телефона
@@ -219,6 +254,7 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                     </div>
+                                    {/* Address input */}
                                     <div>
                                         <label htmlFor="address" className="block text-sm font-medium text-gray-700">
                                             Адрес
@@ -233,6 +269,7 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                     </div>
+                                    {/* Admin role checkbox */}
                                     <div className="flex items-center">
                                         <input
                                             id="isAdmin"
@@ -243,47 +280,35 @@ export default function AuthPage() {
                                             disabled={isLoading}
                                         />
                                         <label htmlFor="isAdmin" className="ml-2 block text-sm text-gray-900">
-                                            Зарегистрироваться как администратор
+                                            Регистрация как администратор
                                         </label>
                                     </div>
                                 </>
                             )}
                         </div>
 
+                        {/* Error message display */}
                         {error && (
-                            <div className="text-red-600 text-sm text-center p-2 bg-red-50 rounded-md">
+                            <div className="text-red-600 text-sm text-center">
                                 {error}
                             </div>
                         )}
 
-                        <div>
+                        {/* Form actions */}
+                        <div className="flex flex-col space-y-4">
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                             >
-                                {isLoading ? (
-                                    <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                                        {isLogin ? "Вход..." : "Регистрация..."}
-                  </span>
-                                ) : isLogin ? "Войти" : "Зарегистрироваться"}
+                                {isLoading ? "Загрузка..." : (isLogin ? "Войти" : "Зарегистрироваться")}
                             </button>
-                        </div>
-
-                        <div className="text-center">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setIsLogin(!isLogin)
-                                    setError("")
-                                }}
-                                className="text-sm text-blue-600 hover:text-blue-800"
+                                onClick={() => setIsLogin(!isLogin)}
+                                className="w-full text-sm text-blue-600 hover:text-blue-500"
                             >
-                                {isLogin ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти"}
+                                {isLogin ? "Создать новую учетную запись" : "Уже есть учетная запись? Войти"}
                             </button>
                         </div>
                     </form>

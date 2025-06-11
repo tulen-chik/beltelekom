@@ -2,7 +2,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from "@/components/header";
 
+/**
+ * Package Page Component
+ * Displays information about service packages and their conditions
+ * Features:
+ * - List of connection conditions
+ * - Current service package rates
+ * - Link to detailed instructions
+ * - Navigation back to home page
+ */
 export default function Component() {
+    // Array of connection conditions for service packages
     const conditions = [
         "подключение к пакетам услуг подразумевает подключение и оплату всех услуг, включенных в пакет;",
         "при подключении к пакету услуг, абоненту предоставляется необходимое оборудование;",
@@ -15,16 +25,21 @@ export default function Component() {
         "Подключение новых абонентов на пакеты услуг электросвязи \"Оптимум плюс\", \"Универсал\" и \"Экспресс лайт\" не производится с 10 октября 2016 года.",
         "при оказании услуг междугородной связи в составе пакета, помимо междугородных минут расходуется такое же количество минут местной связи, в том числе из количества, включенного в пакет."
     ];
+
     return (
         <div className="min-h-screen bg-white flex flex-col">
-            {/* Header */}
+            {/* Header - Contains the main navigation and branding */}
             <Header />
-            {/* Main Content */}
+
+            {/* Main Content - Service package information */}
             <main className="flex-grow container mx-auto px-4 py-8">
+                {/* Page title */}
                 <h1 className="text-2xl font-bold mb-6 text-black" style={{ fontFamily: 'Verdana', fontSize: '24pt' }}>
                     Пакеты услуг от Белтелеком
                 </h1>
+
                 <div className="space-y-4 text-black" style={{ fontFamily: 'Arial' }}>
+                    {/* Connection conditions section */}
                     <h2 className="text-xl font-semibold mb-6">
                         Условия подключения:
                     </h2>
@@ -33,31 +48,37 @@ export default function Component() {
                             <li key={index}>{condition}</li>
                         ))}
                     </ul>
+
+                    {/* Current rates section */}
                     <h3 className="text-base font-semibold mt-4">
                         Ведомость с 16 апреля 2024 года
                     </h3>
+
+                    {/* Rates table */}
                     <table className="min-w-full border-collapse border border-gray-300">
                         <thead className="bg-gray-100">
-                        <tr>
-                            <th className="w-20 font-['Arial'] text-xs">№ п/п</th>
-                            <th className="font-['Arial'] text-xs">Наименование</th>
-                            <th className="text-right font-['Arial'] text-xs">
-                                Тарифы с учетом налога на добавленную стоимость, белорусских рублей
-                            </th>
-                        </tr>
+                            <tr>
+                                <th className="w-20 font-['Arial'] text-xs">№ п/п</th>
+                                <th className="font-['Arial'] text-xs">Наименование</th>
+                                <th className="text-right font-['Arial'] text-xs">
+                                    Тарифы с учетом налога на добавленную стоимость, белорусских рублей
+                                </th>
+                            </tr>
                         </thead>
                         <tbody className="bg-white">
-                        <tr className="border-b border-gray-200">
-                            <td className="font-['Arial'] text-xs">1</td>
-                            <td className="font-['Arial'] text-xs">
-                                «Супер экспресс» (круглосуточный доступ в сеть Интернет без учета трафика на
-                                скорости прием/передача до 15/7,5 Мбит/сек и услуги интерактивного телевидения),
-                                в месяц
-                            </td>
-                            <td className="text-right font-['Arial'] text-xs">34.60</td>
-                        </tr>
+                            <tr className="border-b border-gray-200">
+                                <td className="font-['Arial'] text-xs">1</td>
+                                <td className="font-['Arial'] text-xs">
+                                    «Супер экспресс» (круглосуточный доступ в сеть Интернет без учета трафика на
+                                    скорости прием/передача до 15/7,5 Мбит/сек и услуги интерактивного телевидения),
+                                    в месяц
+                                </td>
+                                <td className="text-right font-['Arial'] text-xs">34.60</td>
+                            </tr>
                         </tbody>
                     </table>
+
+                    {/* Instructions link */}
                     <div className="mt-6">
                         <Link href="/instruction" className="font-['Arial'] text-xs underline">
                             Инструкция о порядке установления и применения тарифов на пакеты услуг электросвязи для
@@ -66,7 +87,8 @@ export default function Component() {
                     </div>
                 </div>
             </main>
-            {/* Footer */}
+
+            {/* Footer - Contains the home page link */}
             <footer className="py-8 flex justify-center">
                 <Link
                     href="/"

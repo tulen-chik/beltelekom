@@ -5,16 +5,36 @@ import { Search } from "lucide-react"
 import type { Subscriber } from "../types/index"
 import { supabase } from "@/lib/supabase"
 
+/**
+ * Props interface for SearchSubscriber component
+ * @property onSelect - Callback function when a subscriber is selected
+ * @property setLoading - Function to update loading state
+ * @property setError - Function to update error state
+ */
 interface SearchSubscriberProps {
     onSelect: (subscriber: Subscriber) => void
     setLoading: (loading: boolean) => void
     setError: (error: string | null) => void
 }
 
+/**
+ * SearchSubscriber Component
+ * A component that allows users to search for subscribers by their ID
+ * Features:
+ * - Search input field
+ * - Real-time search results
+ * - Error handling
+ * - Loading state management
+ */
 export default function SearchSubscriber({ onSelect, setLoading, setError }: SearchSubscriberProps) {
+    // State management for search term and results
     const [searchTerm, setSearchTerm] = useState<string>("")
     const [searchResults, setSearchResults] = useState<Subscriber[]>([])
 
+    /**
+     * Handles the search operation
+     * Queries the Supabase database for subscribers matching the search term
+     */
     const handleSearch = async () => {
         setLoading(true)
         setError(null)
@@ -35,8 +55,10 @@ export default function SearchSubscriber({ onSelect, setLoading, setError }: Sea
     }
 
     return (
+        // Main container with white background and shadow
         <div className="bg-white shadow-md rounded-lg p-6">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Поиск абонента</h2>
+            {/* Search input and button container */}
             <div className="flex items-center mb-4">
                 <input
                     type="text"
@@ -52,6 +74,7 @@ export default function SearchSubscriber({ onSelect, setLoading, setError }: Sea
                     <Search className="h-5 w-5" />
                 </button>
             </div>
+            {/* Search results list */}
             {searchResults.length > 0 && (
                 <ul className="mt-2 border rounded divide-y">
                     {searchResults.map((result) => (

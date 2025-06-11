@@ -4,24 +4,39 @@ import Link from 'next/link'
 import { Phone } from 'lucide-react'
 import Header from "@/components/header";
 
+/**
+ * Help Page Component
+ * Displays information about international cooperation and partnerships
+ * Features:
+ * - Overview of international activities
+ * - List of cooperation areas
+ * - Information about partner organizations
+ * - Navigation back to home page
+ */
 export default function Help() {
     return (
         <div className="min-h-screen bg-white flex flex-col">
-            {/* Header */}
+            {/* Header - Contains the main navigation and branding */}
             <Header/>
-            {/* Main Content */}
+
+            {/* Main Content - International cooperation information */}
             <main className="container mx-auto px-4 py-8">
+                {/* Page title with blue background */}
                 <div className="bg-blue-600 text-white p-4 text-xl font-bold">
                     Международное сотрудничество
                 </div>
+
+                {/* Content section with company information */}
                 <div className="p-6 space-y-6">
                     <div className="space-y-4 text-black font-['Arial']">
+                        {/* Company's international cooperation principles */}
                         <p>
                             Международная деятельность РУП «Белтелеком» строится на принципах партнерства и
                             взаимовыгодного сотрудничества со всеми международными организациями, операторами,
                             компаниями с учетом общегосударственных интересов Республики Беларусь.
                         </p>
 
+                        {/* Company's international strategy */}
                         <p>
                             Основной стратегией компании «Белтелеком» в вопросах международной деятельности является
                             обеспечение единой внешнеэкономической политики, осуществление комплекса мероприятий по
@@ -30,6 +45,8 @@ export default function Help() {
                             новых телекоммуникационных технологий и услуг, формирование положительного имиджа
                             предприятия.
                         </p>
+
+                        {/* Areas of international cooperation */}
                         <div>
                             <h2 className="font-bold mb-2">Направления международного сотрудничества:</h2>
                             <ul className="list-disc pl-6 space-y-2">
@@ -41,6 +58,8 @@ export default function Help() {
                                 </li>
                             </ul>
                         </div>
+
+                        {/* Partner organizations */}
                         <p>
                             «Белтелеком» активно сотрудничает с такими международными организациями, как Международный
                             союз электросвязи (МСЭ), Региональное содружество в области связи (РСС), Европейское
@@ -51,7 +70,7 @@ export default function Help() {
                 </div>
             </main>
 
-            {/* Footer */}
+            {/* Footer - Contains the home page link */}
             <footer className="py-8 flex justify-center">
                 <Link
                     href="/"
@@ -61,7 +80,6 @@ export default function Help() {
                     Главная
                 </Link>
             </footer>
-
         </div>
     )
 }

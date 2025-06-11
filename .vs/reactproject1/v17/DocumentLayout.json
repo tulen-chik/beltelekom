@@ -1,0 +1,224 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\billssection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\billssection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\billmodal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\billmodal.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\userbillscomponent.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\userbillscomponent.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\profilessection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\profilessection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\bonusessection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\bonusessection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\adminpanel.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\adminpanel.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\components\\tariffssection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\components\\tariffssection.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\lib\\seed.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\lib\\seed.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\lib\\supabase.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\lib\\supabase.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\src\\lib\\auth.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:src\\lib\\auth.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|c:\\users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\desktop\\beltelekom\\launch.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A9857706-C039-4A3C-8997-3F5756AE92A3}|reactproject1.esproj|solutionrelative:launch.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 7,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "BillsSection.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BillsSection.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BillsSection.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BillsSection.tsx",
+              "RelativeToolTip": "src\\components\\BillsSection.tsx",
+              "ViewState": "AgIAADoCAAAAAAAAAAAuwEICAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:19:18.417Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ProfilesSection.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\ProfilesSection.tsx",
+              "RelativeDocumentMoniker": "src\\components\\ProfilesSection.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\ProfilesSection.tsx",
+              "RelativeToolTip": "src\\components\\ProfilesSection.tsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:19:01.735Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AdminPanel.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\AdminPanel.tsx",
+              "RelativeDocumentMoniker": "src\\components\\AdminPanel.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\AdminPanel.tsx",
+              "RelativeToolTip": "src\\components\\AdminPanel.tsx",
+              "ViewState": "AgIAADUAAAAAAAAAAAAAwF4AAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:35.953Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "BillModal.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BillModal.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BillModal.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BillModal.tsx",
+              "RelativeToolTip": "src\\components\\BillModal.tsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:35.268Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "BonusesSection.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BonusesSection.tsx",
+              "RelativeDocumentMoniker": "src\\components\\BonusesSection.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\BonusesSection.tsx",
+              "RelativeToolTip": "src\\components\\BonusesSection.tsx",
+              "ViewState": "AgIAADsAAAAAAAAAAAAAwBMAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:33.776Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "TariffsSection.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\TariffsSection.tsx",
+              "RelativeDocumentMoniker": "src\\components\\TariffsSection.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\TariffsSection.tsx",
+              "RelativeToolTip": "src\\components\\TariffsSection.tsx",
+              "ViewState": "AgIAAIYAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:26.453Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UserBillsComponent.tsx",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\UserBillsComponent.tsx",
+              "RelativeDocumentMoniker": "src\\components\\UserBillsComponent.tsx",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\components\\UserBillsComponent.tsx",
+              "RelativeToolTip": "src\\components\\UserBillsComponent.tsx",
+              "ViewState": "AgIAAIABAAAAAAAAAAAowAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:25.231Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "package.json",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\package.json",
+              "RelativeDocumentMoniker": "package.json",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\package.json",
+              "RelativeToolTip": "package.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-04T23:10:52.905Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "seed.ts",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\seed.ts",
+              "RelativeDocumentMoniker": "src\\lib\\seed.ts",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\seed.ts",
+              "RelativeToolTip": "src\\lib\\seed.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:13.312Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "supabase.ts",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\supabase.ts",
+              "RelativeDocumentMoniker": "src\\lib\\supabase.ts",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\supabase.ts",
+              "RelativeToolTip": "src\\lib\\supabase.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:12.183Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "auth.ts",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\auth.ts",
+              "RelativeDocumentMoniker": "src\\lib\\auth.ts",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\src\\lib\\auth.ts",
+              "RelativeToolTip": "src\\lib\\auth.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2025-05-04T23:18:08.648Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "launch.json",
+              "DocumentMoniker": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\launch.json",
+              "RelativeDocumentMoniker": "launch.json",
+              "ToolTip": "C:\\Users\\\u0441\u043E\u043B\u0434\u0430\u0442\u0435\u043D\u043A\u043E \u0435\u0432\u0433\u0435\u043D\u0438\u0439\\Desktop\\beltelekom\\launch.json",
+              "RelativeToolTip": "launch.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-04T23:10:36.016Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

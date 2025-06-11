@@ -2,14 +2,25 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Header from "@/components/header";
 
+/**
+ * Brand Portfolio Page Component
+ * Displays information about the company's brand portfolio and services
+ * Features:
+ * - Overview of main brand and services
+ * - Detailed information about ZALA TV service
+ * - Detailed information about ЯСНА service package
+ * - Brand logos and descriptions
+ * - Navigation back to home page
+ */
 export default function Component() {
     return (
         <div className="min-h-screen bg-white flex flex-col">
-            {/* Header */}
+            {/* Header - Contains the main navigation and branding */}
             <Header/>
 
-            {/* Main Content */}
+            {/* Main Content - Brand portfolio information */}
             <main className="flex-grow container mx-auto px-4 py-8">
+                {/* Page title */}
                 <h1
                     className="text-blue-600 text-center mb-12"
                     style={{ fontFamily: 'Verdana', fontSize: '24pt' }}
@@ -17,7 +28,7 @@ export default function Component() {
                     Бренд-портфель компании
                 </h1>
 
-                {/* byfly Section */}
+                {/* byfly Section - Overview of all brands and services */}
                 <section className="mb-12">
                     <p
                         className="text-black"
@@ -27,8 +38,9 @@ export default function Component() {
                     </p>
                 </section>
 
-                {/* ZALA Section */}
+                {/* ZALA Section - TV services information */}
                 <section className="mb-12">
+                    {/* ZALA logo */}
                     <div className="flex mb-4">
                         <Image
                             src="/images.png"
@@ -38,6 +50,7 @@ export default function Component() {
                             className="object-contain"
                         />
                     </div>
+                    {/* ZALA service description */}
                     <p
                         className="text-black"
                         style={{fontFamily: 'Arial', fontSize: '14pt'}}
@@ -46,8 +59,9 @@ export default function Component() {
                     </p>
                 </section>
 
-                {/* ЯСНА Section */}
+                {/* ЯСНА Section - Service package information */}
                 <section className="mb-12">
+                    {/* ЯСНА logo */}
                     <div className="flex mb-4">
                         <Image
                             src="/logo-e.png"
@@ -57,6 +71,7 @@ export default function Component() {
                             className="object-contain"
                         />
                     </div>
+                    {/* ЯСНА service description */}
                     <p
                         className="text-black"
                         style={{ fontFamily: 'Arial', fontSize: '14pt' }}
@@ -66,7 +81,7 @@ export default function Component() {
                 </section>
             </main>
 
-            {/* Footer */}
+            {/* Footer - Contains the home page link */}
             <footer className="py-8 flex justify-center">
                 <Link
                     href="/"

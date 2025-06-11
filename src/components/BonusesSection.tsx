@@ -6,6 +6,10 @@ import { Plus, Trash, Edit, X, Search, Gift, Calendar, User } from "lucide-react
 import type { Bill, Subscriber } from "../types/index"
 import DateRangePicker from "./DateRangePicker"
 
+/**
+ * Bonus interface definition
+ * Represents a bonus record in the system
+ */
 interface Bonus {
     id: string
     bill_id: string
@@ -17,28 +21,46 @@ interface Bonus {
     applied_at: string | null
 }
 
+/**
+ * BonusesSection Component
+ * A comprehensive component for managing bonuses
+ * Features:
+ * - View all bonuses
+ * - Create new bonuses
+ * - Edit existing bonuses
+ * - Delete bonuses
+ * - Search bills
+ * - Apply bonuses to bills
+ * - Filter bonuses by date range
+ */
 export default function BonusesSection() {
-    const [bonuses, setBonuses] = useState<Bonus[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-    const [isEditing, setIsEditing] = useState<boolean>(false)
-    const [selectedBonus, setSelectedBonus] = useState<Bonus | null>(null)
-    const [newBonus, setNewBonus] = useState<Partial<Bonus>>({
+    // State management for bonuses and UI
+    const [bonuses, setBonuses] = useState<Bonus[]>([]) // List of all bonuses
+    const [loading, setLoading] = useState<boolean>(false) // Loading state
+    const [error, setError] = useState<string | null>(null) // Error state
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false) // Modal visibility
+    const [isEditing, setIsEditing] = useState<boolean>(false) // Edit mode flag
+    const [selectedBonus, setSelectedBonus] = useState<Bonus | null>(null) // Currently selected bonus
+    const [newBonus, setNewBonus] = useState<Partial<Bonus>>({ // New bonus form data
         bill_id: "",
         subscriber_id: "",
         amount: 0,
         reason: "",
         applied: false,
     })
-    const [bills, setBills] = useState<Bill[]>([])
-    const [subscribers, setSubscribers] = useState<Subscriber[]>([])
-    const [searchTerm, setSearchTerm] = useState<string>("")
-    const [searchResults, setSearchResults] = useState<Bill[]>([])
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-    const [endDate, setEndDate] = useState<Date | undefined>(undefined)
 
-    // Загрузка бонусов
+    // State management for bills and subscribers
+    const [bills, setBills] = useState<Bill[]>([]) // List of all bills
+    const [subscribers, setSubscribers] = useState<Subscriber[]>([]) // List of all subscribers
+    const [searchTerm, setSearchTerm] = useState<string>("") // Search term for bills
+    const [searchResults, setSearchResults] = useState<Bill[]>([]) // Search results
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined) // Start date for filtering
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined) // End date for filtering
+
+    /**
+     * Fetches all bonuses from the database
+     * Updates the bonuses state with the fetched data
+     */
     const fetchBonuses = async () => {
         setLoading(true)
         setError(null)
@@ -58,17 +80,20 @@ export default function BonusesSection() {
         }
     }
 
-    // Загрузка счетов и абонентов
+    /**
+     * Fetches all bills and subscribers from the database
+     * Updates the bills and subscribers states with the fetched data
+     */
     const fetchBillsAndSubscribers = async () => {
         setLoading(true)
         try {
-            // Загрузка счетов
+            // Fetch bills
             const { data: billsData, error: billsError } = await supabase
                 .from("bills")
                 .select("*")
                 .order("created_at", { ascending: false })
 
-            // Загрузка абонентов
+            // Fetch subscribers
             const { data: subscribersData, error: subscribersError } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
@@ -86,19 +111,23 @@ export default function BonusesSection() {
         }
     }
 
+    // Load bonuses, bills, and subscribers on component mount
     useEffect(() => {
         fetchBonuses()
         fetchBillsAndSubscribers()
     }, [])
 
-    // Поиск счетов
+    /**
+     * Searches for bills based on search term and date range
+     * Filters results by bill ID, subscriber name, and date
+     */
     const handleSearch = async () => {
         setLoading(true)
         setError(null)
         try {
             let filtered = [...bills]
 
-            // Фильтрация по поисковому запросу (ID счета, имя абонента)
+            // Filter by search term (bill ID, subscriber name)
             if (searchTerm) {
                 filtered = filtered.filter(bill => {
                     const subscriber = subscribers.find(s => s.subscriber_id === bill.subscriber_id)
@@ -111,7 +140,7 @@ export default function BonusesSection() {
                 })
             }
 
-            // Фильтрация по дате
+            // Filter by date range
             if (startDate && endDate) {
                 filtered = filtered.filter(bill => {
                     const billDate = new Date(bill.created_at)
@@ -128,7 +157,10 @@ export default function BonusesSection() {
         }
     }
 
-    // Управление модальным окном
+    /**
+     * Opens the modal for creating or editing a bonus
+     * @param bonus - The bonus to edit, or null for creating a new one
+     */
     const openModal = (bonus: Bonus | null = null) => {
         if (bonus) {
             setSelectedBonus(bonus)
@@ -147,6 +179,9 @@ export default function BonusesSection() {
         setIsModalOpen(true)
     }
 
+    /**
+     * Closes the modal and resets all form data
+     */
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedBonus(null)
@@ -163,7 +198,10 @@ export default function BonusesSection() {
         setEndDate(undefined)
     }
 
-    // Сохранение бонуса
+    /**
+     * Saves a new bonus or updates an existing one
+     * Includes validation and error handling
+     */
     const handleSaveBonus = async () => {
         if (!newBonus.bill_id || !newBonus.amount || !newBonus.reason) {
             setError("Пожалуйста, заполните все обязательные поля")
@@ -174,7 +212,7 @@ export default function BonusesSection() {
         setError(null)
 
         try {
-            // Проверяем существование счета
+            // Verify bill exists
             const { data: bill, error: billError } = await supabase
                 .from("bills")
                 .select("*")
@@ -185,12 +223,13 @@ export default function BonusesSection() {
                 throw new Error("Указанный счет не существует")
             }
 
-            // Проверяем, что сумма бонуса не превышает сумму счета
+            // Verify bonus amount doesn't exceed bill amount
             if (newBonus.amount > bill.amount) {
                 throw new Error("Сумма бонуса не может превышать сумму счета")
             }
 
             if (isEditing && selectedBonus) {
+                // Update existing bonus
                 const { data, error } = await supabase
                     .from("bonuses")
                     .update(newBonus)
@@ -200,7 +239,7 @@ export default function BonusesSection() {
 
                 if (error) throw error
 
-                // Если применяем бонус сейчас
+                // Apply bonus if requested
                 if (newBonus.applied && !selectedBonus.applied) {
                     const result = await applyBonusToBill(data)
                     if (!result.success) throw new Error(result.message)
@@ -208,6 +247,7 @@ export default function BonusesSection() {
 
                 alert("Бонус успешно обновлен!")
             } else {
+                // Create new bonus
                 const { data, error } = await supabase
                     .from("bonuses")
                     .insert(newBonus)
@@ -216,7 +256,7 @@ export default function BonusesSection() {
 
                 if (error) throw error
 
-                // Если применяем сразу
+                // Apply bonus if requested
                 if (newBonus.applied) {
                     const result = await applyBonusToBill(data)
                     if (!result.success) throw new Error(result.message)
@@ -235,84 +275,57 @@ export default function BonusesSection() {
         }
     }
 
-    // Применение бонуса к счету
-// Применение бонуса к счету
+    /**
+     * Applies a bonus to a bill
+     * Includes validation and transaction handling
+     * @param bonus - The bonus to apply
+     * @returns Object containing success status and message
+     */
     const applyBonusToBill = async (bonus: Bonus) => {
         try {
-            // 1. Проверка состояния бонуса
+            // Check bonus state
             if (bonus.applied) {
                 throw new Error(`Бонус ${bonus.id} уже был применен ранее`);
             }
 
-            // 2. Получение счета с транзакционной блокировкой
+            // Get bill with transaction lock
             const { data: bill, error: billError } = await supabase
                 .from('bills')
                 .select('*')
                 .eq('id', bonus.bill_id)
-                .single();
+                .single()
 
-            if (billError || !bill) {
-                throw new Error(`Счет ${bonus.bill_id} не найден: ${billError?.message || 'Неизвестная ошибка'}`);
-            }
+            if (billError) throw billError
+            if (!bill) throw new Error('Счет не найден')
 
-            // 3. Проверка суммы
-            if (bonus.amount > bill.amount) {
-                throw new Error(
-                    `Сумма бонуса (${bonus.amount} ₽) превышает сумму счета (${bill.amount} ₽)`
-                );
-            }
-
-            // 4. Обновление счета
-            const newAmount = Number((bill.amount - bonus.amount).toFixed(2));
+            // Update bill amount
             const { error: updateError } = await supabase
                 .from('bills')
-                .update({ amount: newAmount })
-                .eq('id', bonus.bill_id);
+                .update({ amount: bill.amount - bonus.amount })
+                .eq('id', bill.id)
 
-            if (updateError) {
-                throw new Error(`Ошибка обновления счета: ${updateError.message}`);
-            }
+            if (updateError) throw updateError
 
-            // 5. Отметка бонуса как примененного
+            // Mark bonus as applied
             const { error: bonusError } = await supabase
                 .from('bonuses')
-                .update({
+                .update({ 
                     applied: true,
                     applied_at: new Date().toISOString()
                 })
-                .eq('id', bonus.id);
+                .eq('id', bonus.id)
 
-            if (bonusError) {
-                // Откат изменений счета
-                await supabase
-                    .from('bills')
-                    .update({ amount: bill.amount })
-                    .eq('id', bonus.bill_id);
+            if (bonusError) throw bonusError
 
-                throw new Error(`Не удалось отметить бонус как примененный: ${bonusError.message}`);
-            }
-
-            return {
-                success: true,
-                message: `Бонус на сумму ${bonus.amount} ₽ успешно применен к счету ${bonus.bill_id}`
-            };
-
+            return { success: true, message: 'Бонус успешно применен' }
         } catch (error) {
-            console.error('Полная ошибка применения бонуса:', {
-                error,
-                bonusId: bonus.id,
-                billId: bonus.bill_id,
-                amount: bonus.amount
-            });
-
-            return {
-                success: false,
-                message: error instanceof Error
-                    ? error.message
-                    : 'Неизвестная ошибка при обработке бонуса'
-            };
+            console.error('Ошибка применения бонуса:', error)
+            return { 
+                success: false, 
+                message: error instanceof Error ? error.message : 'Не удалось применить бонус'
+            }
         }
-    };
+    }
 
     // Удаление бонуса
     const handleDeleteBonus = async (id: string) => {

@@ -8,6 +8,10 @@ import DateRangePicker from "./DateRangePicker"
 import CallsList from "./CallsList"
 import { sendBillEmail } from '@/app/actions/sendBillEmail'
 
+/**
+ * Bill interface definition
+ * Represents a billing record in the system
+ */
 interface Bill {
     id: string
     subscriber_id: string
@@ -19,14 +23,28 @@ interface Bill {
     created_at: string
 }
 
+/**
+ * BillsSection Component
+ * A comprehensive component for managing telephone bills
+ * Features:
+ * - View all bills
+ * - Create new bills
+ * - Edit existing bills
+ * - Delete bills
+ * - Search subscribers
+ * - Select calls for billing
+ * - Generate bills based on selected calls
+ * - Send bills via email
+ */
 export default function BillsSection() {
-    const [bills, setBills] = useState<Bill[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-    const [isEditing, setIsEditing] = useState<boolean>(false)
-    const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
-    const [newBill, setNewBill] = useState<Partial<Bill>>({
+    // State management for bills and UI
+    const [bills, setBills] = useState<Bill[]>([]) // List of all bills
+    const [loading, setLoading] = useState<boolean>(false) // Loading state
+    const [error, setError] = useState<string | null>(null) // Error state
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false) // Modal visibility
+    const [isEditing, setIsEditing] = useState<boolean>(false) // Edit mode flag
+    const [selectedBill, setSelectedBill] = useState<Bill | null>(null) // Currently selected bill
+    const [newBill, setNewBill] = useState<Partial<Bill>>({ // New bill form data
         subscriber_id: "",
         paid: false,
         start_date: "",
@@ -34,15 +52,20 @@ export default function BillsSection() {
         amount: 0,
         details: {},
     })
-    const [selectedCalls, setSelectedCalls] = useState<Call[]>([])
-    const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null)
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-    const [endDate, setEndDate] = useState<Date | undefined>(undefined)
-    const [calls, setCalls] = useState<Call[]>([])
-    const [searchTerm, setSearchTerm] = useState<string>("")
-    const [searchResults, setSearchResults] = useState<Subscriber[]>([])
 
-    // Загрузка счетов
+    // State management for calls and subscribers
+    const [selectedCalls, setSelectedCalls] = useState<Call[]>([]) // Selected calls for billing
+    const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null) // Selected subscriber
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined) // Start date for call period
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined) // End date for call period
+    const [calls, setCalls] = useState<Call[]>([]) // List of available calls
+    const [searchTerm, setSearchTerm] = useState<string>("") // Search term for subscribers
+    const [searchResults, setSearchResults] = useState<Subscriber[]>([]) // Search results
+
+    /**
+     * Fetches all bills from the database
+     * Updates the bills state with the fetched data
+     */
     const fetchBills = async () => {
         setLoading(true)
         setError(null)
@@ -58,11 +81,15 @@ export default function BillsSection() {
         }
     }
 
+    // Load bills on component mount
     useEffect(() => {
         fetchBills()
     }, [])
 
-    // Поиск абонентов
+    /**
+     * Searches for subscribers based on the search term
+     * Filters results by phone number or name
+     */
     const handleSearch = async () => {
         setLoading(true)
         setError(null)
@@ -88,7 +115,10 @@ export default function BillsSection() {
         }
     }
 
-    // Загрузка звонков
+    /**
+     * Fetches calls for the selected subscriber within the date range
+     * Updates the calls state with the fetched data
+     */
     const fetchCalls = async () => {
         if (selectedSubscriber && startDate && endDate) {
             setLoading(true)
@@ -117,13 +147,17 @@ export default function BillsSection() {
         }
     }
 
+    // Fetch calls when subscriber or date range changes
     useEffect(() => {
         if (selectedSubscriber && startDate && endDate) {
             fetchCalls()
         }
     }, [selectedSubscriber, startDate, endDate])
 
-    // Управление выбором звонков
+    /**
+     * Toggles the selection of a call for billing
+     * @param call - The call to toggle
+     */
     const handleCallToggle = (call: Call) => {
         setSelectedCalls(prev => {
             const isSelected = prev.some(c => c.id === call.id)
@@ -131,10 +165,15 @@ export default function BillsSection() {
         })
     }
 
+    // Select all calls
     const handleSelectAll = () => setSelectedCalls([...calls])
+    // Deselect all calls
     const handleDeselectAll = () => setSelectedCalls([])
 
-    // Управление модальным окном
+    /**
+     * Opens the modal for creating or editing a bill
+     * @param bill - The bill to edit, or null for creating a new one
+     */
     const openModal = async (bill: Bill | null = null) => {
         if (bill) {
             setSelectedBill(bill)
@@ -162,6 +201,9 @@ export default function BillsSection() {
         setIsModalOpen(true)
     }
 
+    /**
+     * Closes the modal and resets all form data
+     */
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedBill(null)
@@ -182,7 +224,10 @@ export default function BillsSection() {
         setSearchResults([])
     }
 
-    // Генерация счета
+    /**
+     * Generates a bill based on selected calls
+     * Calculates costs using appropriate tariffs
+     */
     const generateBill = async () => {
         setLoading(true)
         setError(null)
@@ -237,7 +282,10 @@ export default function BillsSection() {
         }
     }
 
-    // Сохранение счета
+    /**
+     * Saves a new bill or updates an existing one
+     * Includes validation and error handling
+     */
     const handleSaveBill = async () => {
         if (newBill.subscriber_id && newBill.start_date && newBill.end_date && newBill.amount !== undefined) {
             setLoading(true)

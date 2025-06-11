@@ -4,6 +4,10 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { Plus, Trash, Edit, X, RefreshCw, Wallet } from "lucide-react"
 
+/**
+ * Subscriber interface definition
+ * Represents a subscriber profile in the system
+ */
 interface Subscriber {
     subscriber_id: string
     money: number
@@ -18,14 +22,27 @@ interface Subscriber {
     }
 }
 
+/**
+ * ProfilesSection Component
+ * A comprehensive component for managing subscriber profiles
+ * Features:
+ * - View all profiles
+ * - Create new profiles
+ * - Edit existing profiles
+ * - Soft delete profiles
+ * - Restore deleted profiles
+ * - Manage subscriber balance
+ * - Track profile status
+ */
 export default function ProfilesSection() {
-    const [profiles, setProfiles] = useState<Subscriber[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-    const [isEditing, setIsEditing] = useState<boolean>(false)
-    const [selectedProfile, setSelectedProfile] = useState<Subscriber | null>(null)
-    const [newProfile, setNewProfile] = useState<Partial<Subscriber>>({
+    // State management for profiles and UI
+    const [profiles, setProfiles] = useState<Subscriber[]>([]) // List of all profiles
+    const [loading, setLoading] = useState<boolean>(false) // Loading state
+    const [error, setError] = useState<string | null>(null) // Error state
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false) // Modal visibility
+    const [isEditing, setIsEditing] = useState<boolean>(false) // Edit mode flag
+    const [selectedProfile, setSelectedProfile] = useState<Subscriber | null>(null) // Currently selected profile
+    const [newProfile, setNewProfile] = useState<Partial<Subscriber>>({ // New profile form data
         money: 0,
         category: "0.5",
         role: "user",
@@ -37,7 +54,10 @@ export default function ProfilesSection() {
         },
     })
 
-    // Загрузка профилей
+    /**
+     * Fetches all subscriber profiles from the database
+     * Updates the profiles state with the fetched data
+     */
     const fetchProfiles = async () => {
         setLoading(true)
         setError(null)
@@ -57,11 +77,15 @@ export default function ProfilesSection() {
         }
     }
 
+    // Load profiles on component mount
     useEffect(() => {
         fetchProfiles()
     }, [])
 
-    // Открытие модального окна для создания или редактирования
+    /**
+     * Opens the modal for creating or editing a profile
+     * @param profile - The profile to edit, or null for creating a new one
+     */
     const openModal = (profile: Subscriber | null = null) => {
         if (profile) {
             setSelectedProfile(profile)
@@ -87,7 +111,9 @@ export default function ProfilesSection() {
         setIsModalOpen(true)
     }
 
-    // Закрытие модального окна
+    /**
+     * Closes the modal and resets all form data
+     */
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedProfile(null)
@@ -104,7 +130,10 @@ export default function ProfilesSection() {
         })
     }
 
-    // Создание или обновление профиля
+    /**
+     * Saves a new profile or updates an existing one
+     * Includes validation and error handling
+     */
     const handleSaveProfile = async () => {
         if (
             newProfile.subscriber_id_substring &&
@@ -116,25 +145,25 @@ export default function ProfilesSection() {
             setError(null)
             try {
                 if (isEditing && selectedProfile) {
-                    // Обновление профиля
+                    // Update existing profile
                     const { data, error } = await supabase
                         .from("subscribers_profiles")
                         .update({
                             ...newProfile,
-                            money: Number(newProfile.money) // Убедимся, что money - число
+                            money: Number(newProfile.money) // Ensure money is a number
                         })
                         .eq("subscriber_id", selectedProfile.subscriber_id)
                     if (error) throw error
                     console.log("Профиль успешно обновлен:", data)
                     alert("Профиль успешно обновлен!")
                 } else {
-                    // Создание профиля
+                    // Create new profile
                     const { data, error } = await supabase
                         .from("subscribers_profiles")
                         .insert({
                             ...newProfile,
                             deleted: false,
-                            money: Number(newProfile.money) // Убедимся, что money - число
+                            money: Number(newProfile.money) // Ensure money is a number
                         })
                     if (error) throw error
                     console.log("Профиль успешно создан:", data)
@@ -153,7 +182,10 @@ export default function ProfilesSection() {
         }
     }
 
-    // Мягкое удаление профиля
+    /**
+     * Soft deletes a profile by marking it as deleted
+     * @param subscriberId - The ID of the profile to delete
+     */
     const handleDeleteProfile = async (subscriberId: string) => {
         setLoading(true)
         setError(null)
@@ -173,7 +205,10 @@ export default function ProfilesSection() {
         }
     }
 
-    // Восстановление профиля
+    /**
+     * Restores a previously deleted profile
+     * @param subscriberId - The ID of the profile to restore
+     */
     const handleRestoreProfile = async (subscriberId: string) => {
         setLoading(true)
         setError(null)

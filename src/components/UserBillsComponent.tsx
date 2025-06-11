@@ -13,6 +13,11 @@ import { jsPDF } from "jspdf"
 // @ts-ignore
 import autoTable from 'jspdf-autotable'
 
+/**
+ * Interface definitions for the component
+ */
+
+// Call detail interface
 interface CallDetail {
     id: number
     duration: number
@@ -21,10 +26,12 @@ interface CallDetail {
     start_time: string
 }
 
+// Bill details interface
 interface BillDetails {
     calls: CallDetail[]
 }
 
+// Bonus interface
 interface Bonus {
     id: string
     bill_id: string
@@ -37,6 +44,7 @@ interface Bonus {
     created_by?: string | null
 }
 
+// Bill interface
 interface Bill {
     id: string
     subscriber_id: string
@@ -50,27 +58,50 @@ interface Bill {
     bonuses?: Bonus[]
 }
 
+// Component props interface
 interface UserBillsComponentProps {
     initialBills: Bill[]
     userId: Subscriber
 }
 
+/**
+ * Formats duration in seconds to a human-readable string
+ * @param seconds - Duration in seconds
+ * @returns Formatted duration string (e.g., "2ч 30м 15с")
+ */
 const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     const remainingSeconds = seconds % 60
     return `${hours}ч ${minutes}м ${remainingSeconds}с`
 }
+
+/**
+ * UserBillsComponent
+ * A component for displaying and managing user bills
+ * Features:
+ * - View bill history
+ * - View bill details
+ * - Download bills as PDF
+ * - View and apply bonuses
+ * - User profile information
+ * - Balance display
+ */
 export default function UserBillsComponent({ initialBills, userId }: UserBillsComponentProps) {
-    const [bills, setBills] = useState<Bill[]>(initialBills)
-    const [selectedBill, setSelectedBill] = useState<Bill | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [userData, setUserData] = useState<Subscriber | null>(null)
-    const [balance, setBalance] = useState<number | null>(null)
+    // State management
+    const [bills, setBills] = useState<Bill[]>(initialBills) // List of bills
+    const [selectedBill, setSelectedBill] = useState<Bill | null>(null) // Currently selected bill
+    const [isModalOpen, setIsModalOpen] = useState(false) // Modal visibility
+    const [loading, setLoading] = useState(false) // Loading state
+    const [error, setError] = useState<string | null>(null) // Error state
+    const [userData, setUserData] = useState<Subscriber | null>(null) // User profile data
+    const [balance, setBalance] = useState<number | null>(null) // User balance
     const router = useRouter()
 
+    /**
+     * Fetches bills with their associated bonuses
+     * Updates the bills state with the fetched data
+     */
     useEffect(() => {
         const fetchBillsWithBonuses = async () => {
             setLoading(true)
@@ -103,6 +134,9 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         fetchBillsWithBonuses()
     }, [initialBills, userId])
 
+    /**
+     * Fetches user profile data and balance
+     */
     const fetchUserData = async () => {
         setLoading(true)
         try {
@@ -124,8 +158,11 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         }
     }
 
+    /**
+     * Handles bill selection and fetches fresh bonus data
+     * @param bill - The selected bill
+     */
     const handleBillSelect = async (bill: Bill) => {
-        // Fetch fresh bonus data when bill is selected
         try {
             const { data: bonuses, error } = await supabase
                 .from('bonuses')
@@ -146,17 +183,32 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
         }
     }
 
+    /**
+     * Closes the bill details modal
+     */
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedBill(null)
     }
 
+    /**
+     * Handles user logout
+     * Removes authentication cookies and redirects to home page
+     */
     const handleLogout = () => {
         Cookies.remove('userRole')
         Cookies.remove('userProfile')
         router.push('/')
     }
 
+    /**
+     * Generates and downloads a PDF version of the selected bill
+     * Includes:
+     * - User information
+     * - Bill details
+     * - Call history
+     * - Bonus information
+     */
     const downloadBillAsPdf = () => {
         if (!selectedBill || !userData) return
 
@@ -165,6 +217,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             unit: 'mm'
         })
 
+        // Set up font
         try {
             doc.addFont('/NotoSans-Regular.ttf', 'NotoSans', 'normal')
             doc.setFont('NotoSans')
@@ -173,21 +226,21 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             doc.setFont('helvetica')
         }
 
-        // Заголовок
+        // Add header
         doc.setFontSize(18)
         doc.text('Детали счета', 105, 20, { align: 'center' })
 
-        // Информация о подписчике
+        // Add subscriber information
         doc.setFontSize(12)
         doc.text(`Имя: ${userData.raw_user_meta_data?.full_name || 'Не указано'}`, 14, 40)
         doc.text(`Адрес: ${userData.raw_user_meta_data?.address || 'Не указано'}`, 14, 50)
         doc.text(`Телефон: ${userData.raw_user_meta_data?.phone_number || 'Не указано'}`, 14, 60)
 
-        // Информация о счете
+        // Add bill information
         doc.text(`Период: ${format(new Date(selectedBill.start_date), 'dd/MM/yyyy')} - ${format(new Date(selectedBill.end_date), 'dd/MM/yyyy')}`, 14, 75)
         doc.text(`Сумма: $${selectedBill.amount.toFixed(2)}`, 14, 85)
 
-        // Добавляем информацию о бонусах
+        // Add bonus information if available
         if (selectedBill.bonuses && selectedBill.bonuses.length > 0) {
             const totalBonuses = selectedBill.bonuses.reduce((sum, bonus) => sum + bonus.amount, 0)
             doc.text(`Бонусы: $${totalBonuses.toFixed(2)}`, 14, 95)
@@ -197,7 +250,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             doc.text(`Дата создания: ${format(new Date(selectedBill.created_at), 'dd/MM/yyyy HH:mm')}`, 14, 95)
         }
 
-        // Подготовка данных для таблицы
+        // Prepare call data for table
         const callData = selectedBill.details.calls.map(call => [
             format(new Date(call.call_date), 'dd/MM/yyyy'),
             call.start_time,
@@ -205,7 +258,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             formatDuration(call.duration)
         ])
 
-        // Таблица с вызовами
+        // Add calls table
         autoTable(doc, {
             startY: selectedBill.bonuses?.length ? 125 : 105,
             head: [['Дата', 'Время', 'Тариф', 'Продолжительность']],
@@ -229,7 +282,7 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
             }
         })
 
-        // Добавляем таблицу с бонусами, если они есть
+        // Add bonuses table if available
         if (selectedBill.bonuses && selectedBill.bonuses.length > 0) {
             const bonusData = selectedBill.bonuses.map(bonus => [
                 bonus.reason,
@@ -248,14 +301,11 @@ export default function UserBillsComponent({ initialBills, userId }: UserBillsCo
                     textColor: 255,
                     font: 'NotoSans',
                     fontStyle: 'normal'
-                },
-                bodyStyles: {
-                    font: 'NotoSans',
-                    fontStyle: 'normal'
                 }
             })
         }
 
+        // Save the PDF
         // Итоговая информация
         const finalY = (doc as any).lastAutoTable.finalY + 10
         doc.text(`Общее количество звонков: ${selectedBill.details.calls.length}`, 14, finalY)

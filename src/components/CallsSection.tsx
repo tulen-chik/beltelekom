@@ -6,27 +6,45 @@ import { Plus, Trash, Edit, X, Search } from "lucide-react"
 import type {Call, Subscriber, Tariff} from "../types/index"
 import DateRangePicker from "./DateRangePicker"
 
+/**
+ * CallsSection Component
+ * A comprehensive component for managing telephone calls
+ * Features:
+ * - View all calls
+ * - Create new calls
+ * - Edit existing calls
+ * - Delete calls
+ * - Search subscribers
+ * - Filter calls by date range
+ * - Manage call tariffs
+ */
 export default function CallsSection() {
-    const [calls, setCalls] = useState<Call[]>([])
-    const [tariffs, setTariffs] = useState<Tariff[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-    const [isEditing, setIsEditing] = useState<boolean>(false)
-    const [selectedCall, setSelectedCall] = useState<Call | null>(null)
-    const [newCall, setNewCall] = useState<Partial<Call>>({
+    // State management for calls and UI
+    const [calls, setCalls] = useState<Call[]>([]) // List of all calls
+    const [tariffs, setTariffs] = useState<Tariff[]>([]) // List of available tariffs
+    const [loading, setLoading] = useState<boolean>(false) // Loading state
+    const [error, setError] = useState<string | null>(null) // Error state
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false) // Modal visibility
+    const [isEditing, setIsEditing] = useState<boolean>(false) // Edit mode flag
+    const [selectedCall, setSelectedCall] = useState<Call | null>(null) // Currently selected call
+    const [newCall, setNewCall] = useState<Partial<Call>>({ // New call form data
         zone_code: "",
         call_date: "",
         start_time: "",
         duration: 0,
         subscriber_id: "",
     })
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-    const [endDate, setEndDate] = useState<Date | undefined>(undefined)
-    const [searchTerm, setSearchTerm] = useState<string>("")
-    const [searchResults, setSearchResults] = useState<Subscriber[]>([])
 
-    // Загрузка звонков
+    // State management for filtering and search
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined) // Start date for filtering
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined) // End date for filtering
+    const [searchTerm, setSearchTerm] = useState<string>("") // Search term for subscribers
+    const [searchResults, setSearchResults] = useState<Subscriber[]>([]) // Search results
+
+    /**
+     * Fetches all calls from the database
+     * Updates the calls state with the fetched data
+     */
     const fetchCalls = async () => {
         setLoading(true)
         setError(null)
@@ -42,7 +60,10 @@ export default function CallsSection() {
         }
     }
 
-    // Загрузка тарифов
+    /**
+     * Fetches all tariffs from the database
+     * Updates the tariffs state with the fetched data
+     */
     const fetchTariffs = async () => {
         setLoading(true)
         setError(null)
@@ -58,24 +79,28 @@ export default function CallsSection() {
         }
     }
 
+    // Load calls and tariffs on component mount
     useEffect(() => {
         fetchCalls()
         fetchTariffs()
     }, [])
 
-    // Поиск абонентов по номеру телефона и имени
+    /**
+     * Searches for subscribers based on phone number and name
+     * Filters results to exclude admin users
+     */
     const handleSearch = async () => {
         setLoading(true)
         setError(null)
         try {
-            // Сначала получаем всех абонентов
+            // First get all subscribers
             const { data, error } = await supabase
                 .from("subscribers_profiles")
                 .select("*")
 
             if (error) throw error
 
-            // Фильтруем на клиенте
+            // Filter on client side
             const filtered = data?.filter(subscriber => {
                 const phone = subscriber.raw_user_meta_data?.phone_number || ""
                 const name = subscriber.raw_user_meta_data?.full_name || ""
@@ -91,7 +116,10 @@ export default function CallsSection() {
         }
     }
 
-    // Открытие модального окна для создания или редактирования
+    /**
+     * Opens the modal for creating or editing a call
+     * @param call - The call to edit, or null for creating a new one
+     */
     const openModal = (call: Call | null = null) => {
         if (call) {
             setSelectedCall(call)
@@ -110,7 +138,9 @@ export default function CallsSection() {
         setIsModalOpen(true)
     }
 
-    // Закрытие модального окна
+    /**
+     * Closes the modal and resets all form data
+     */
     const closeModal = () => {
         setIsModalOpen(false)
         setSelectedCall(null)
@@ -123,7 +153,10 @@ export default function CallsSection() {
         })
     }
 
-    // Создание или обновление звонка
+    /**
+     * Saves a new call or updates an existing one
+     * Includes validation and error handling
+     */
     const handleSaveCall = async () => {
         if (
             newCall.zone_code &&
@@ -136,6 +169,7 @@ export default function CallsSection() {
             setError(null)
             try {
                 if (isEditing && selectedCall) {
+                    // Update existing call
                     const { data, error } = await supabase
                         .from("calls")
                         .update(newCall)
@@ -144,6 +178,7 @@ export default function CallsSection() {
                     console.log("Звонок успешно обновлен:", data)
                     alert("Звонок успешно обновлен!")
                 } else {
+                    // Create new call
                     const { data, error } = await supabase.from("calls").insert(newCall)
                     if (error) throw error
                     console.log("Звонок успешно создан:", data)
@@ -162,7 +197,10 @@ export default function CallsSection() {
         }
     }
 
-    // Удаление звонка
+    /**
+     * Deletes a call from the database
+     * @param id - The ID of the call to delete
+     */
     const handleDeleteCall = async (id: string) => {
         setLoading(true)
         setError(null)
